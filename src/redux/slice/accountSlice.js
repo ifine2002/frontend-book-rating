@@ -40,7 +40,6 @@ export const accountSlide = createSlice({
             state.activeMenu = action.payload;
         },
         setUserLoginInfo: (state, action) => {
-            console.log("Redux payload:", action.payload);
             state.isAuthenticated = true;
             state.isLoading = false;
             state.user.id = action?.payload?.id;
@@ -52,7 +51,6 @@ export const accountSlide = createSlice({
             state.user.role.permissions = action?.payload?.role?.permissions ?? [];
         },
         setLogoutAction: (state, action) => {
-            localStorage.removeItem('access_token');
             state.isAuthenticated = false;
             state.user = {
                 id: "",
@@ -79,9 +77,6 @@ export const accountSlide = createSlice({
 
         builder.addCase(fetchAccount.fulfilled, (state, action) => {
             if (action.payload) {
-                // Kiểm tra cấu trúc phản hồi API thực tế
-                console.log("API Response:", action.payload);
-
                 state.isAuthenticated = true;
                 state.isLoading = false;
                 state.user.id = action?.payload?.data?.id;

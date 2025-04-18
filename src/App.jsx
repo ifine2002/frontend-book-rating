@@ -10,9 +10,10 @@ import NotFound from './components/share/notfound';
 import LayoutAdmin from './components/admin/AdminLayout';
 import LoginPage from './pages/auth/login';
 import RegisterPage from './pages/auth/register';
-import { useDispatch, useSelector } from 'react-redux';
 import { fetchAccount } from './redux/slice/accountSlice';
-import { store } from './redux/store';
+import UserPage from './pages/admin/user';
+import { useAppDispatch, useAppSelector } from './redux/hooks';
+import PermissionPage from './pages/admin/permission';
 
 const LayoutClient = () => {
 
@@ -24,21 +25,16 @@ const LayoutClient = () => {
 }
 
 export default function App() {
-  const dispatch = useDispatch();
-  const isLoading = useSelector(state => state.account.isLoading);
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector(state => state.account.isLoading);
+
   useEffect(() => {
     if (
       window.location.pathname === '/login'
       || window.location.pathname === '/register'
     )
       return;
-    
-    console.log("App mounted, checking token...");
-    const token = localStorage.getItem('access_token');
-    console.log("Token exists:", !!token);
-    
     dispatch(fetchAccount())
-        
   }, [])
 
 
@@ -60,6 +56,16 @@ export default function App() {
           index: true,
           element:
             <DashboardPage />
+        },
+        {
+          path: "user",
+          element:
+            <UserPage />
+        },
+        {
+          path: "permission",
+          element:
+            <PermissionPage />
         }
       ],
     },

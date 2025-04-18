@@ -15,9 +15,9 @@ import { Layout, Menu, Dropdown, Space, message, Avatar, Button } from 'antd';
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Link } from 'react-router-dom';
 import { isMobile } from 'react-device-detect';
-import { useDispatch, useSelector } from 'react-redux';
 import { callLogout } from './../../api/services';
 import { setLogoutAction } from './../../redux/slice/accountSlice';
+import { useAppSelector, useAppDispatch } from '../../redux/hooks';
 
 const { Content, Sider } = Layout;
 
@@ -26,54 +26,44 @@ const LayoutAdmin = () => {
 
     const [collapsed, setCollapsed] = useState(false);
     const [activeMenu, setActiveMenu] = useState('');
-    const user = useSelector(state => state.account.user);
+    const user = useAppSelector(state => state.account.user);
 
-    const permissions = useSelector(state => state.account.user?.role?.permissions || []);
+    const permissions = useAppSelector(state => state.account.user?.role?.permissions || []);
     const [menuItems, setMenuItems] = useState([]);
 
     const navigate = useNavigate();
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
 
     useEffect(() => {
         setActiveMenu(location.pathname)
     }, [location])
 
     useEffect(() => {
-        console.log("User data:", user);
-        console.log("Permissions:", permissions);
 
         const items = [
             {
                 label: <Link to="/admin">Dashboard</Link>,
                 key: '/admin',
                 icon: <AppstoreOutlined />
+            },
+            {
+                label: <Link to="/admin/user">Quản lý người dùng</Link>,
+                key: '/admin/user',
+                icon: <UserOutlined />
+            },
+            {
+                label: <Link to="/admin/permission">Quản lý quyền hạn</Link>,
+                key: '/admin/permission',
+                icon: <ApiOutlined />
             }
         ];
 
-        if (permissions && permissions.length > 0) {
-            if (permissions.includes("USER_VIEW")) {
-                items.push({
-                    label: <Link to="/admin/user">Quản lý người dùng</Link>,
-                    key: '/admin/user',
-                    icon: <UserOutlined />
-                });
-            }
-
-            if (permissions.includes("BOOK_VIEW")) {
-                items.push({
-                    label: <Link to="/admin/book">Quản lý sách</Link>,
-                    key: '/admin/book',
-                    icon: <ExceptionOutlined />
-                });
-            }
-        }
 
         setMenuItems(items);
-    }, [permissions, user]);
+    }, []);
 
     const handleLogout = async () => {
         const res = await callLogout();
-        console.log('status=', res.status)
         if (res && res.status === 200) {
             dispatch(setLogoutAction({}));
             message.success('Đăng xuất thành công');

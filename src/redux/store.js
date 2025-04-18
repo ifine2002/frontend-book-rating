@@ -1,22 +1,24 @@
-import {
-    configureStore
-} from '@reduxjs/toolkit';
+import { configureStore } from '@reduxjs/toolkit';
 import accountReducer from './slice/accountSlice';
-import { persistStore, persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
+import userReducer from './slice/userSlice';
+import permissionReducer from './slice/permissionSlice';
+// Import thêm các reducer khác khi cần
 
-const persistConfig = {
-    key: 'root',
-    storage,
-};
-
-const persistedReducer = persistReducer(persistConfig, accountReducer);
-
+// Tạo store
 export const store = configureStore({
     reducer: {
-        account: persistedReducer,
+        account: accountReducer,
+        user: userReducer,
+        permission: permissionReducer,
+        // Thêm các reducer khác vào đây khi cần
+        // job: jobReducer,
+        // resume: resumeReducer,
+        // role: roleReducer,
+        // skill: skillReducer,
     },
 });
 
+// Export các tiện ích để sử dụng trong app
+export const dispatch = store.dispatch;
+export const getState = store.getState;
 
-export const persistor = persistStore(store);
