@@ -85,8 +85,13 @@ export const callUpdateUser = (userData, userId) => {
   // Thêm các trường dữ liệu từ userData vào formData theo đúng tên thuộc tính trong ReqCreateUser
   if (userData.fullName) formData.append('fullName', userData.fullName);
 
-  // Xử lý file image
-  if (userData.image) formData.append('image', userData.image);
+  // Xử lý file image hoặc flag xóa image
+  if (userData.image) {
+    formData.append('image', userData.image);
+  } else if (userData.deleteImage === true) {
+    // Thêm flag xóa ảnh
+    formData.append('deleteImage', 'true');
+  }
 
   if (userData.phone) formData.append('phone', userData.phone);
   if (userData.gender) formData.append('gender', userData.gender);
@@ -123,6 +128,10 @@ export const callFetchUser = (query) => {
   return axios.get(`/user/list?${query}`);
 }
 
+export const callFetchUserDetail = (id) => {
+  return axios.get(`/user/detail/${id}`);
+}
+
 /**
  *
 Module Role
@@ -139,6 +148,7 @@ export const callUpdateRole = (role, id) => {
   return axios.put(`/role/${id}`, {
     name: role.name,
     description: role.description,
+    active: role.isActive,
     permissions: role.permissions
   })
 }

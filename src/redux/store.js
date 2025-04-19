@@ -2,7 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import accountReducer from './slice/accountSlice';
 import userReducer from './slice/userSlice';
 import permissionReducer from './slice/permissionSlice';
-// Import thêm các reducer khác khi cần
+import roleReducer from './slice/roleSlice';
 
 // Tạo store
 export const store = configureStore({
@@ -10,10 +10,10 @@ export const store = configureStore({
         account: accountReducer,
         user: userReducer,
         permission: permissionReducer,
+        role: roleReducer,
         // Thêm các reducer khác vào đây khi cần
         // job: jobReducer,
         // resume: resumeReducer,
-        // role: roleReducer,
         // skill: skillReducer,
     },
 });

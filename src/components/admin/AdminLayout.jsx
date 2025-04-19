@@ -47,14 +47,19 @@ const LayoutAdmin = () => {
                 icon: <AppstoreOutlined />
             },
             {
-                label: <Link to="/admin/user">Quản lý người dùng</Link>,
+                label: <Link to="/admin/user">User</Link>,
                 key: '/admin/user',
                 icon: <UserOutlined />
             },
             {
-                label: <Link to="/admin/permission">Quản lý quyền hạn</Link>,
+                label: <Link to="/admin/permission">Permission</Link>,
                 key: '/admin/permission',
                 icon: <ApiOutlined />
+            },
+            {
+                label: <Link to="/admin/role">Role</Link>,
+                key: '/admin/role',
+                icon: <ExceptionOutlined />
             }
         ];
 
@@ -88,7 +93,7 @@ const LayoutAdmin = () => {
     return (
         <>
             <Layout
-                style={{ minHeight: '100vh' }}
+                style={{ minHeight: '100vh', width: '100%', overflowX: 'hidden' }}
                 className="layout-admin"
             >
                 {!isMobile ?
@@ -116,7 +121,7 @@ const LayoutAdmin = () => {
                     />
                 }
 
-                <Layout>
+                <Layout style={{ overflow: 'hidden' }}>
                     {!isMobile &&
                         <div className='admin-header' style={{ display: "flex", justifyContent: "space-between", marginRight: 20 }}>
                             <Button
@@ -139,7 +144,7 @@ const LayoutAdmin = () => {
                             </Dropdown>
                         </div>
                     }
-                    <Content style={{ padding: '15px' }}>
+                    <Content style={{ padding: '15px', overflow: 'auto' }}>
                         <Outlet />
                     </Content>
                 </Layout>

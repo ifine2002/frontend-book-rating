@@ -14,6 +14,7 @@ import { fetchAccount } from './redux/slice/accountSlice';
 import UserPage from './pages/admin/user';
 import { useAppDispatch, useAppSelector } from './redux/hooks';
 import PermissionPage from './pages/admin/permission';
+import RolePage from './pages/admin/role';
 
 const LayoutClient = () => {
 
@@ -66,6 +67,11 @@ export default function App() {
           path: "permission",
           element:
             <PermissionPage />
+        },
+        {
+          path: "role",
+          element:
+            <RolePage />
         }
       ],
     },

@@ -1,36 +1,50 @@
 import DataTable from "./../../components/client/data-table/index";
-import { fetchUser } from "./../../redux/slice/userSlice";
-import { DeleteOutlined, EditOutlined, PlusOutlined, EyeOutlined } from "@ant-design/icons";
-import { Button, Popconfirm, Space, message, notification } from "antd";
-import { useState, useRef } from 'react';
+import { useAppDispatch, useAppSelector } from "./../../redux/hooks";
+import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, Popconfirm, Space, Tag, message, notification } from "antd";
+import { useState, useRef, useEffect } from 'react';
 import dayjs from 'dayjs';
-import { callDeleteUser, callFetchUserDetail } from "./../../api/services";
+import { callDeleteRole, callFetchPermission } from "./../../api/services";
 import queryString from 'query-string';
-import ViewDetailUser from "./../../components/admin/user/view.user";
+import { fetchRole } from "./../../redux/slice/roleSlice";
+import ModalRole from "./../../components/admin/role/modal.role";
 import { sfLike } from "spring-filter-query-builder";
-import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import ModalUser from "../../components/admin/user/modal.user";
+import { groupByPermission } from "./../../components/share/utils";
 
-const UserPage = () => {
+const RolePage = () => {
     const [openModal, setOpenModal] = useState(false);
-    const [dataInit, setDataInit] = useState(null);
-    const [openViewDetail, setOpenViewDetail] = useState(false);
-    const [userDetail, setUserDetail] = useState(null);
 
     const tableRef = useRef();
 
+    const isFetching = useAppSelector(state => state.role.isFetching);
+    const data = useAppSelector(state => state.role.data);
+    const roles = useAppSelector(state => state.role.result);
+
     const dispatch = useAppDispatch();
-    const isFetching = useAppSelector(state => state.user.isFetching);
-    const data = useAppSelector(state => state.user.data || {});
-    const users = useAppSelector(state => state.user.result || []);
 
 
+    //all backend permissions
+    const [listPermissions, setListPermissions] = useState(null);
 
-    const handleDeleteUser = async (id) => {
+    //current role
+    const [singleRole, setSingleRole] = useState(null);
+
+    useEffect(() => {
+        const init = async () => {
+            const res = await callFetchPermission(`page=0&size=100`);
+            if (res.data?.data?.result) {
+                setListPermissions(groupByPermission(res.data?.data?.result))
+            }
+        }
+        init();
+    }, [])
+
+
+    const handleDeleteRole = async (id) => {
         if (id) {
-            const res = await callDeleteUser(id);
-            if (+res.status === 200) {
-                message.success('Xóa User thành công');
+            const res = await callDeleteRole(id);
+            if (res && res.status === 200) {
+                message.success('Xóa Role thành công');
                 reloadTable();
             } else {
                 notification.error({
@@ -45,50 +59,43 @@ const UserPage = () => {
         tableRef?.current?.reload();
     }
 
-    const handleViewDetail = async (record) => {
-        const res = await callFetchUserDetail(record.id);
-        setUserDetail(res.data.data)
-        setOpenViewDetail(true);
-    };
-
     const columns = [
         {
-            title: 'STT',
-            key: 'index',
-            width: 50,
-            align: "center",
-            render: (text, record, index) => {
+            title: 'Id',
+            dataIndex: 'id',
+            width: 250,
+            render: (text, record, index, action) => {
                 return (
-                    <>
-                        {(index + 1) + (data.page - 1) * (data.pageSize)}
-                    </>)
+                    <span>
+                        {record.id}
+                    </span>
+                )
             },
             hideInSearch: true,
         },
         {
             title: 'Name',
-            dataIndex: 'fullName',
+            dataIndex: 'name',
             sorter: true,
         },
         {
-            title: 'Email',
-            dataIndex: 'email',
-            sorter: true,
+            title: 'Trạng thái',
+            dataIndex: 'isActive',
+            render(dom, entity, index, action, schema) {
+                return <>
+                    <Tag color={entity.isActive ? "lime" : "red"} >
+                        {entity.isActive ? "ACTIVE" : "INACTIVE"}
+                    </Tag>
+                </>
+            },
+            hideInSearch: true,
         },
-
-        {
-            title: 'Role',
-            dataIndex: ["role", "name"],
-            sorter: true,
-            hideInSearch: true
-        },
-
         {
             title: 'CreatedAt',
             dataIndex: 'createdAt',
             width: 200,
             sorter: true,
-            render: (text, record) => {
+            render: (text, record, index, action) => {
                 return (
                     <>{record.createdAt ? dayjs(record.createdAt).format('DD-MM-YYYY HH:mm:ss') : ""}</>
                 )
@@ -100,7 +107,7 @@ const UserPage = () => {
             dataIndex: 'updatedAt',
             width: 200,
             sorter: true,
-            render: (text, record) => {
+            render: (text, record, index, action) => {
                 return (
                     <>{record.updatedAt ? dayjs(record.updatedAt).format('DD-MM-YYYY HH:mm:ss') : ""}</>
                 )
@@ -108,10 +115,11 @@ const UserPage = () => {
             hideInSearch: true,
         },
         {
+
             title: 'Actions',
             hideInSearch: true,
             width: 50,
-            render: (_value, entity) => (
+            render: (_value, entity, _index, _action) => (
                 <Space>
                     <EditOutlined
                         style={{
@@ -120,27 +128,19 @@ const UserPage = () => {
                         }}
                         type=""
                         onClick={() => {
+                            setSingleRole(entity);
                             setOpenModal(true);
-                            setDataInit(entity);
                         }}
                     />
-
                     <Popconfirm
                         placement="leftTop"
-                        title={"Xác nhận xóa user"}
-                        description={"Bạn có chắc chắn muốn xóa user này ?"}
-                        onConfirm={(e) => {
-                            e.stopPropagation();
-                            handleDeleteUser(entity.id);
-                        }}
-                        onCancel={(e) => e.stopPropagation()}
+                        title={"Xác nhận xóa role"}
+                        description={"Bạn có chắc chắn muốn xóa role này ?"}
+                        onConfirm={() => handleDeleteRole(entity.id)}
                         okText="Xác nhận"
                         cancelText="Hủy"
                     >
-                        <span 
-                            style={{ cursor: "pointer", margin: "0 10px" }}
-                            onClick={(e) => e.stopPropagation()}
-                        >
+                        <span style={{ cursor: "pointer", margin: "0 10px" }}>
                             <DeleteOutlined
                                 style={{
                                     fontSize: 20,
@@ -151,33 +151,27 @@ const UserPage = () => {
                     </Popconfirm>
                 </Space>
             ),
+
         },
     ];
 
     const buildQuery = (params, sort, filter) => {
+        const clone = { ...params };
         const q = {
             page: params.current - 1,
             size: params.pageSize,
             filter: ""
         }
 
-        const clone = { ...params };
-        if (clone.fullName) q.filter = `${sfLike("fullName", clone.fullName)}`;
-        if (clone.email) {
-            q.filter = clone.name ?
-                q.filter + " and " + `${sfLike("email", clone.email)}`
-                : `${sfLike("email", clone.email)}`;
-        }
+        if (clone.name) q.filter = `${sfLike("name", clone.name)}`;
 
         if (!q.filter) delete q.filter;
+
         let temp = queryString.stringify(q);
 
         let sortBy = "";
-        if (sort && sort.fullName) {
-            sortBy = sort.name === 'ascend' ? "sort=fullName,asc" : "sort=fullName,desc";
-        }
-        if (sort && sort.email) {
-            sortBy = sort.email === 'ascend' ? "sort=email,asc" : "sort=email,desc";
+        if (sort && sort.name) {
+            sortBy = sort.name === 'ascend' ? "sort=name,asc" : "sort=name,desc";
         }
         if (sort && sort.createdAt) {
             sortBy = sort.createdAt === 'ascend' ? "sort=createdAt,asc" : "sort=createdAt,desc";
@@ -195,19 +189,18 @@ const UserPage = () => {
 
         return temp;
     }
-
     return (
         <div>
             <DataTable
                 actionRef={tableRef}
-                headerTitle="Danh sách Users"
+                headerTitle="Danh sách Roles (Vai Trò)"
                 rowKey="id"
                 loading={isFetching}
                 columns={columns}
-                dataSource={users}
+                dataSource={roles}
                 request={async (params, sort, filter) => {
                     const query = buildQuery(params, sort, filter);
-                    dispatch(fetchUser({ query }))
+                    dispatch(fetchRole({ query }))
                 }}
                 scroll={{ x: true }}
                 pagination={
@@ -220,7 +213,7 @@ const UserPage = () => {
                     }
                 }
                 rowSelection={false}
-                toolBarRender={() => {
+                toolBarRender={(_action, _rows) => {
                     return (
                         <Button
                             icon={<PlusOutlined />}
@@ -231,32 +224,17 @@ const UserPage = () => {
                         </Button>
                     );
                 }}
-                onRow={(record) => {
-                    return {
-                        onClick: (event) => {
-                            if (!event.target.closest('.ant-space')) {
-                                handleViewDetail(record);
-                            }
-                        },
-                        style: { cursor: 'pointer' }
-                    };
-                }}
             />
-            <ModalUser
+            <ModalRole
                 openModal={openModal}
                 setOpenModal={setOpenModal}
                 reloadTable={reloadTable}
-                dataInit={dataInit}
-                setDataInit={setDataInit}
-            />
-            <ViewDetailUser
-                onClose={() => setOpenViewDetail(false)}
-                open={openViewDetail}
-                userDetail={userDetail}
-                setUserDetail={setUserDetail}
+                listPermissions={listPermissions}
+                singleRole={singleRole}
+                setSingleRole={setSingleRole}
             />
         </div>
     )
 }
 
-export default UserPage;
+export default RolePage;

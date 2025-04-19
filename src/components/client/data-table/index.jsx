@@ -8,7 +8,6 @@ const DataTable = ({
     dataSource,
     postData,
     pagination,
-    // sticky = { offsetHeader: 50 },
     loading,
     rowKey = (record) => record.id,
     scroll,
@@ -21,6 +20,7 @@ const DataTable = ({
     actionRef,
     dateFormatter = 'string',
     rowSelection,
+    onRow,
 }) => {
     return (
         <ConfigProvider locale={vi_VN}>
@@ -31,7 +31,6 @@ const DataTable = ({
                 postData={postData}
                 pagination={pagination}
                 bordered
-                // sticky={sticky}
                 loading={loading}
                 rowKey={rowKey}
                 scroll={scroll}
@@ -44,6 +43,7 @@ const DataTable = ({
                 actionRef={actionRef}
                 dateFormatter={dateFormatter}
                 rowSelection={rowSelection}
+                onRow={onRow}
             />
         </ConfigProvider>
     );

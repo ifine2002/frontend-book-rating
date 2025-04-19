@@ -1,17 +1,16 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { callFetchRole, callFetchRoleById } from '@/config/api';
-
+import { callFetchRole, callFetchRoleById } from './../../api/services';
 // First, create the thunk
 export const fetchRole = createAsyncThunk(
-    'resume/fetchRole',
+    'role/fetchRole',
     async ({ query }) => {
         const response = await callFetchRole(query);
-        return response;
+        return response.data;
     }
 )
 
 export const fetchRoleById = createAsyncThunk(
-    'resume/fetchRoleById',
+    'role/fetchRoleById',
     async (id) => {
         const response = await callFetchRoleById(id);
         return response;
@@ -33,7 +32,7 @@ const initialState = {
         id: "",
         name: "",
         description: "",
-        active: false,
+        isActive: false,
         permissions: []
     }
 };
@@ -50,7 +49,7 @@ export const roleSlide = createSlice({
                 id: "",
                 name: "",
                 description: "",
-                active: false,
+                isActive: false,
                 permissions: []
             }
         },
@@ -73,10 +72,8 @@ export const roleSlide = createSlice({
         builder.addCase(fetchRole.fulfilled, (state, action) => {
             if (action.payload && action.payload.data) {
 
-                console.log("check payload:", action.payload)
-
                 state.isFetching = false;
-                state.meta = action.payload.data.meta;
+                state.meta = action.payload.data;
                 state.result = action.payload.data.result;
             }
             // Add user to the state array
@@ -90,7 +87,7 @@ export const roleSlide = createSlice({
                 id: "",
                 name: "",
                 description: "",
-                active: false,
+                isActive: false,
                 permissions: []
             }
             // Add user to the state array
@@ -103,7 +100,7 @@ export const roleSlide = createSlice({
                 id: "",
                 name: "",
                 description: "",
-                active: false,
+                isActive: false,
                 permissions: []
             }
             // Add user to the state array
