@@ -5,7 +5,7 @@ export const fetchRole = createAsyncThunk(
     'role/fetchRole',
     async ({ query }) => {
         const response = await callFetchRole(query);
-        return response.data;
+        return response;
     }
 )
 
@@ -71,6 +71,7 @@ export const roleSlide = createSlice({
 
         builder.addCase(fetchRole.fulfilled, (state, action) => {
             if (action.payload && action.payload.data) {
+                console.log("check payload:", action.payload)
 
                 state.isFetching = false;
                 state.meta = action.payload.data;

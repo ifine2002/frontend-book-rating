@@ -47,7 +47,7 @@ const UserPage = () => {
 
     const handleViewDetail = async (record) => {
         const res = await callFetchUserDetail(record.id);
-        setUserDetail(res.data.data)
+        setUserDetail(res.data)
         setOpenViewDetail(true);
     };
 

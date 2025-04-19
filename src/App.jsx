@@ -15,6 +15,7 @@ import UserPage from './pages/admin/user';
 import { useAppDispatch, useAppSelector } from './redux/hooks';
 import PermissionPage from './pages/admin/permission';
 import RolePage from './pages/admin/role';
+import styles from './styles/app.module.scss';
 
 const LayoutClient = () => {
 

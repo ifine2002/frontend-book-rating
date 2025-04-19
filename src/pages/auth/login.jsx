@@ -30,9 +30,8 @@ const LoginPage = () => {
         setIsSubmit(false);
 
         if (res?.data) {
-            localStorage.setItem('access_token', res.data.data.access_token);
-            console.log('user=', res.data.data.user);
-            dispatch(setUserLoginInfo(res.data.data.user));
+            localStorage.setItem('access_token', res.data.access_token);
+            dispatch(setUserLoginInfo(res.data.user));
             message.success('Đăng nhập tài khoản thành công!');
             navigate(callback ? callback : '/');
         } else {

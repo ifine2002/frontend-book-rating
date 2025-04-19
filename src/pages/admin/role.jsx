@@ -32,8 +32,8 @@ const RolePage = () => {
     useEffect(() => {
         const init = async () => {
             const res = await callFetchPermission(`page=0&size=100`);
-            if (res.data?.data?.result) {
-                setListPermissions(groupByPermission(res.data?.data?.result))
+            if (res.data?.result) {
+                setListPermissions(groupByPermission(res.data?.result))
             }
         }
         init();

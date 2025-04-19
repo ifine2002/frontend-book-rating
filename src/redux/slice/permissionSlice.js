@@ -6,7 +6,7 @@ export const fetchPermission = createAsyncThunk(
     'permission/fetchPermission',
     async ({ query }) => {
         const response = await callFetchPermission(query);
-        return response.data;
+        return response;
     }
 )
 
@@ -47,6 +47,7 @@ export const permissionSlide = createSlice({
 
         builder.addCase(fetchPermission.fulfilled, (state, action) => {
             if (action.payload && action.payload.data) {
+
 
                 state.isFetching = false;
                 state.data = action.payload.data;
