@@ -71,7 +71,6 @@ export const roleSlide = createSlice({
 
         builder.addCase(fetchRole.fulfilled, (state, action) => {
             if (action.payload && action.payload.data) {
-                console.log("check payload:", action.payload)
 
                 state.isFetching = false;
                 state.meta = action.payload.data;

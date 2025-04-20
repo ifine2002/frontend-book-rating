@@ -10,6 +10,7 @@ import {
     AliwangwangOutlined,
     BugOutlined,
     ScheduleOutlined,
+    BookOutlined 
 } from '@ant-design/icons';
 import { Layout, Menu, Dropdown, Space, message, Avatar, Button } from 'antd';
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -60,6 +61,11 @@ const LayoutAdmin = () => {
                 label: <Link to="/admin/role">Role</Link>,
                 key: '/admin/role',
                 icon: <ExceptionOutlined />
+            },
+            {
+                label: <Link to="/admin/category">Category</Link>,
+                key: '/admin/category',
+                icon: <BookOutlined />
             }
         ];
 

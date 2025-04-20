@@ -16,6 +16,7 @@ import { useAppDispatch, useAppSelector } from './redux/hooks';
 import PermissionPage from './pages/admin/permission';
 import RolePage from './pages/admin/role';
 import styles from './styles/app.module.scss';
+import CategoryPage from './pages/admin/category';
 
 const LayoutClient = () => {
 
@@ -73,6 +74,11 @@ export default function App() {
           path: "role",
           element:
             <RolePage />
+        },
+        {
+          path: "category",
+          element:
+            <CategoryPage />
         }
       ],
     },

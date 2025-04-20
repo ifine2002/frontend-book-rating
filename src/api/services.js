@@ -198,3 +198,56 @@ export const callFetchPermission = (query) => {
 export const callFetchPermissionById = (id) => {
   return axios.get(`/permission/${id}`);
 }
+
+/**
+ *
+ *Module Category
+ */
+
+ export const callCreateCategory = (data) => {
+  // Tạo FormData object
+  const formData = new FormData();
+
+  if (data.name) formData.append('name', data.name);
+  if (data.description) formData.append('description', data.description);
+
+  // Xử lý file image
+  if (data.image) formData.append('image', data.image);
+
+
+  // Gửi request với content-type là multipart/form-data
+  return axios.post('/category/', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+}
+
+export const callUpdateCategory = (data, id) => {
+  // Tạo FormData object
+  const formData = new FormData();
+
+  if (data.name) formData.append('name', data.name);
+  if (data.description) formData.append('description', data.description);
+
+  // Xử lý file image hoặc flag xóa image
+  if (data.image) {
+    formData.append('image', data.image);
+  } else if (data.deleteImage === true) {
+    // Thêm flag xóa ảnh
+    formData.append('deleteImage', 'true');
+  }
+  return axios.put(`/category/${id}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+}
+
+export const callDeleteCategory = (id) => {
+  return axios.delete(`/category/${id}`);
+}
+
+export const callFetchCategory = (query) => {
+  return axios.get(`/category/list?${query}`);
+}
