@@ -53,17 +53,18 @@ const UserPage = () => {
 
     const columns = [
         {
-            title: 'STT',
-            key: 'index',
+            title: 'Id',
+            dataIndex: 'id',
             width: 50,
-            align: "center",
-            render: (text, record, index) => {
+            render: (text, record, index, action) => {
                 return (
-                    <>
-                        {(index + 1) + (data.page - 1) * (data.pageSize)}
-                    </>)
+                    <span>
+                        {record.id}
+                    </span>
+                )
             },
             hideInSearch: true,
+            sorter: true,
         },
         {
             title: 'Name',
@@ -184,6 +185,9 @@ const UserPage = () => {
         }
         if (sort && sort.updatedAt) {
             sortBy = sort.updatedAt === 'ascend' ? "sort=updatedAt,asc" : "sort=updatedAt,desc";
+        }
+        if (sort && sort.id) {
+            sortBy = sort.id === 'ascend' ? "sort=id,asc" : "sort=id,desc";
         }
 
         //mặc định sort theo updatedAt

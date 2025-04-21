@@ -53,6 +53,11 @@ const LayoutAdmin = () => {
                 icon: <UserOutlined />
             },
             {
+                label: <Link to="/admin/book">Book</Link>,
+                key: '/admin/book',
+                icon: <BankOutlined />
+            },
+            {
                 label: <Link to="/admin/permission">Permission</Link>,
                 key: '/admin/permission',
                 icon: <ApiOutlined />

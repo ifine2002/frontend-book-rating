@@ -17,6 +17,7 @@ import PermissionPage from './pages/admin/permission';
 import RolePage from './pages/admin/role';
 import styles from './styles/app.module.scss';
 import CategoryPage from './pages/admin/category';
+import BookPage from './pages/admin/book';
 
 const LayoutClient = () => {
 
@@ -64,6 +65,11 @@ export default function App() {
           path: "user",
           element:
             <UserPage />
+        },
+        {
+          path: "book",
+          element:
+            <BookPage />
         },
         {
           path: "permission",

@@ -134,6 +134,112 @@ export const callFetchUserDetail = (id) => {
 
 /**
  *
+ *Module Book
+ */
+
+ export const callCreateBook = (data) => {
+  // Tạo FormData object
+  const formData = new FormData();
+  if (data.name) formData.append('name', data.name);
+  if (data.description) formData.append('description', data.description);
+  // Xử lý file image
+  if (data.image) formData.append('image', data.image);
+  // Chuyển đổi date thành định dạng ISO cho LocalDate
+  if (data.publishedDate) {
+    // Nếu là Date object
+    if (data.publishedDate instanceof Date) {
+      const isoDate = data.publishedDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+      formData.append('publishedDate', isoDate);
+    } else {
+      // Nếu đã là string đúng định dạng
+      formData.append('publishedDate', data.publishedDate);
+    }
+  }
+
+  if (data.bookFormat) formData.append('bookFormat', data.bookFormat);
+  if (data.bookSaleLink) formData.append('bookSaleLink', data.bookSaleLink);
+
+  if (data.language) formData.append('language', data.language);
+  if (data.status) formData.append('status', data.status);
+  if (data.categoryIds) {
+    if (Array.isArray(data.categoryIds)) {
+      data.categoryIds.forEach(categoryId => {
+        formData.append('categoryIds', categoryId);
+      });
+    } else {
+      formData.append('categoryIds', data.categoryIds);
+    }
+  }
+  // Gửi request với content-type là multipart/form-data
+  return axios.post('/book/', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+}
+
+export const callUpdateBook = (data, id) => {
+   // Tạo FormData object
+   const formData = new FormData();
+   if (data.name) formData.append('name', data.name);
+   if (data.description) formData.append('description', data.description);
+   // Xử lý file image hoặc flag xóa image
+  if (data.image) {
+    formData.append('image', data.image);
+  } else if (data.deleteImage === true) {
+    // Thêm flag xóa ảnh
+    formData.append('deleteImage', 'true');
+  }
+   // Chuyển đổi date thành định dạng ISO cho LocalDate
+   if (data.publishedDate) {
+     // Nếu là Date object
+     if (data.publishedDate instanceof Date) {
+       const isoDate = data.publishedDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+       formData.append('publishedDate', isoDate);
+     } else {
+       // Nếu đã là string đúng định dạng
+       formData.append('publishedDate', data.publishedDate);
+     }
+   }
+ 
+   if (data.bookFormat) formData.append('bookFormat', data.bookFormat);
+   if (data.bookSaleLink) formData.append('bookSaleLink', data.bookSaleLink);
+ 
+   if (data.language) formData.append('language', data.language);
+   if (data.author) formData.append('author', data.author);
+   if (data.status) formData.append('status', data.status);
+   
+   if (data.categoryIds) {
+    if (Array.isArray(data.categoryIds)) {
+      data.categoryIds.forEach(categoryId => {
+        formData.append('categoryIds', categoryId);
+      });
+    } else {
+      formData.append('categoryIds', data.categoryIds);
+    }
+  }
+   // Gửi request với content-type là multipart/form-data
+   return axios.put(`/book/${id}`, formData, {
+     headers: {
+       'Content-Type': 'multipart/form-data'
+     }
+   });
+}
+
+export const callDeleteBook = (id) => {
+  return axios.delete(`/book/${id}`);
+}
+
+export const callFetchBook = (query) => {
+  return axios.get(`/book/list?${query}`);
+}
+
+export const callGetBookById = (id) => {
+  return axios.get(`/book/${id}`);
+}
+
+/**
+ *
 Module Role
  */
 export const callCreateRole = (role) => {

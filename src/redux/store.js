@@ -4,6 +4,7 @@ import userReducer from './slice/userSlice';
 import permissionReducer from './slice/permissionSlice';
 import roleReducer from './slice/roleSlice';
 import categoryReducer from './slice/categorySlice';
+import bookReducer from './slice/bookSlice';
 
 // Tạo store
 export const store = configureStore({
@@ -14,7 +15,7 @@ export const store = configureStore({
         role: roleReducer,
         // Thêm các reducer khác vào đây khi cần
         // job: jobReducer,
-        // resume: resumeReducer,
+        book: bookReducer,
         category: categoryReducer,
     },
 });

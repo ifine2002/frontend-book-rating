@@ -1,53 +1,72 @@
 import { ModalForm, ProForm, ProFormDatePicker, ProFormDigit, ProFormSelect, ProFormText } from "@ant-design/pro-components";
-import { Col, Form, Row, message, notification, Upload } from "antd";
-import { PlusOutlined } from '@ant-design/icons';
+import { Col, Form, Row, message, notification, Upload, Select } from "antd";
+import { PlusOutlined, MonitorOutlined  } from '@ant-design/icons';
 import { isMobile } from 'react-device-detect';
 import { useState, useEffect } from "react";
-import { callCreateUser, callFetchRole, callUpdateUser } from "./../../../api/services";
+import { callCreateBook, callFetchCategory, callUpdateBook } from "./../../../api/services";
 import DebounceSelect from "../../share/DebounceSelect";
+import { da } from "date-fns/locale";
 
-const ModalUser = (props) => {
+const ModalBook = (props) => {
     const { openModal, setOpenModal, reloadTable, dataInit, setDataInit } = props;
-    const [roles, setRoles] = useState([]);
+    const [optionsCategory, setOptionsCategory] = useState([]);
     const [fileList, setFileList] = useState([]);
     const [isDeleteImage, setIsDeleteImage] = useState(false);
 
     const [form] = Form.useForm();
 
     useEffect(() => {
-        setIsDeleteImage(false);
+        const init = async () => {
+            await fetchCategory();
+            setIsDeleteImage(false);
         
-        if (dataInit?.id) {
-            if (dataInit.role) {
-                setRoles([
-                    {
-                        label: dataInit.role?.name, 
-                        value: dataInit.role?.id,
-                        key: dataInit.role?.id,
+            if (dataInit?.id) {
+                if (dataInit.categories) {
+                    const d = dataInit.categories;
+                    const arr = d.map((item) => {
+                       return {
+                        label: item.name,
+                        value: item.id + "",
+                        key: item.id + ""
                     }
-                ])
-            }
-            form.setFieldsValue({
-                ...dataInit,
-                role: { label: dataInit.role?.name, value: dataInit.role?.id }
-            })
+                    });
+                    form.setFieldValue("categories", arr);
+                }
 
-            if (dataInit.image) {
-                setFileList([
-                    {
-                        uid: '-1',
-                        name: 'image.png',
-                        status: 'done',
-                        url: dataInit.image,
-                    }
-                ]);
+                if (dataInit.image) {
+                    setFileList([
+                        {
+                            uid: '-1',
+                            name: 'image.png',
+                            status: 'done',
+                            url: dataInit.image,
+                        }
+                    ]);
+                } else {
+                    setFileList([]);
+                }
             } else {
                 setFileList([]);
             }
-        } else {
-            setFileList([]);
         }
+        init();
     }, [dataInit]);
+
+    const fetchCategory = async () => {
+        let query = `page=0&size=100&sort=createdAt,desc`;
+
+        const res = await callFetchCategory(query);
+        if (res && res.data) {
+            const arr = res?.data?.result?.map(item => {
+                return {
+                    label: item.name,
+                    value: item.id + "",
+                    key: item.id + ""
+                }
+            }) ?? [];
+            setOptionsCategory(arr);
+        }
+    }
 
     const handleChangeUpload = ({ fileList }) => {
         if (fileList.length > 0 && fileList[0].originFileObj) {
@@ -77,54 +96,59 @@ const ModalUser = (props) => {
         return true;
     };
 
-    const submitUser = async (valuesForm) => {
-        const { fullName, email, password, phone, gender, userDOB, address, status, role } = valuesForm;
+    const submitBook = async (valuesForm) => {
+        const { name, description, publishedDate, bookFormat, bookSaleLink, language, author, status, categories } = valuesForm;
         try {
             if (dataInit?.id) {
                 //update
-                const user = {
-                    fullName,
-                    phone,
-                    gender,
-                    userDOB,
-                    address,
+                const book = {
+                    name,
+                    description,
+                    publishedDate,
+                    bookFormat,
+                    bookSaleLink,
+                    language,
+                    author,
                     status,
-                    roleId: role.value
+                    categoryIds: Array.isArray(categories) 
+                        ? categories.map(item => typeof item === 'string' ? item : item.value) 
+                        : [categories]
                 };
                 
                 if (fileList.length > 0 && fileList[0].originFileObj) {
-                    user.image = fileList[0].originFileObj;
+                    book.image = fileList[0].originFileObj;
                 }
                 
                 if (isDeleteImage) {
-                    user.deleteImage = true;
+                    book.deleteImage = true;
                 }
-                
-                const res = await callUpdateUser(user, dataInit.id);
-                message.success("Cập nhật user thành công");
+                const res = await callUpdateBook(book, dataInit.id);
+                message.success("Cập nhật book thành công");
                 handleReset();
                 reloadTable();
                     
             } else {
                 //create
-                const user = {
-                    fullName,
-                    email,
-                    password,
-                    phone,
-                    gender,
-                    userDOB,
-                    address,
+                const book = {
+                    name,
+                    description,
+                    publishedDate,
+                    bookFormat,
+                    bookSaleLink,
+                    language,
+                    author,
                     status,
-                    roleId: role.value,
+                    categoryIds: Array.isArray(categories) 
+                        ? categories.map(item => typeof item === 'string' ? item : item.value) 
+                        : [categories]
                 };
                 
                 if (fileList.length > 0 && fileList[0].originFileObj) {
-                    user.image = fileList[0].originFileObj;
+                    book.image = fileList[0].originFileObj;
                 }
                 
-                const res = await callCreateUser(user);
-                message.success("Thêm mới user thành công");
+                const res = await callCreateBook(book);
+                message.success("Thêm mới book thành công");
                 handleReset();
                 reloadTable();
             }
@@ -157,31 +181,16 @@ const ModalUser = (props) => {
     const handleReset = async () => {
         form.resetFields();
         setDataInit(null);
-        setRoles([]);
+        setOptionsCategory([]);
         setFileList([]);
         setIsDeleteImage(false);
         setOpenModal(false);
     }
 
-
-    async function fetchRoleList(name) {
-        const res = await callFetchRole(`page=0&size=100&name=/${name}/i`);
-        if (res && res.data) {
-            const list = res.data.data.result;
-            const temp = list.map(item => {
-                return {
-                    label: item.name,
-                    value: item.id
-                }
-            })
-            return temp;
-        } else return [];
-    }
-
     return (
         <>
             <ModalForm
-                title={<>{dataInit?.id ? "Cập nhật User" : "Tạo mới User"}</>}
+                title={<>{dataInit?.id ? "Cập nhật Book" : "Tạo mới Book"}</>}
                 open={openModal}
                 modalProps={{
                     onCancel: () => { handleReset() },
@@ -196,99 +205,62 @@ const ModalUser = (props) => {
                 scrollToFirstError={true}
                 preserve={false}
                 form={form}
-                onFinish={submitUser}
+                onFinish={submitBook}
                 initialValues={dataInit?.id ? {
                     ...dataInit,
-                    role: { label: dataInit.role?.name, value: dataInit.role?.id }
                 } : {}}
 
             >
                 <Row gutter={16}>
-                    <Col lg={12} md={12} sm={24} xs={24}>
+                    <Col lg={8} md={6} sm={24} xs={24}>
                         <ProFormText
-                            disabled={dataInit?.id ? true : false}
-                            label="Email"
-                            name="email"
-                            rules={[
-                                { required: true, message: 'Vui lòng không bỏ trống' },
-                                { type: 'email', message: 'Vui lòng nhập email hợp lệ' }
-                            ]}
-                            placeholder="Nhập email"
-                        />
-                    </Col>
-                    <Col lg={12} md={12} sm={24} xs={24}>
-                        <ProFormText.Password
-                            disabled={dataInit?.id ? true : false}
-                            label="Password"
-                            name="password"
-                            rules={[{ required: dataInit?.id ? false : true, message: 'Vui lòng không bỏ trống' }]}
-                            placeholder={dataInit?.id  ? " " : "Nhập password"}
-                        />
-                    </Col>
-                    <Col lg={6} md={6} sm={24} xs={24}>
-                        <ProFormText
-                            label="Tên hiển thị"
-                            name="fullName"
+                            label="Name"
+                            name="name"
                             rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
-                            placeholder="Nhập tên hiển thị"
+                            placeholder="Nhập tên sách"
+                        />
+                    </Col>
+                    <Col lg={16} md={6} sm={24} xs={24}>
+                        <ProFormText
+                            label="Description"
+                            name="description"
+                            rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
+                            placeholder="Nhập mô tả"
                         />
                     </Col>
                     <Col lg={6} md={6} sm={24} xs={24}>
                         <ProFormText
-                            label="Phone"
-                            name="phone"
+                            name="bookFormat"
+                            label="Format"
+                            placeholder="Nhập số trang"
+                            rules={[{ required: true, message: 'Vui lòng không bỏ trống!' }]}
+                        />
+                    </Col>
+                    <Col lg={12} md={6} sm={24} xs={24}>
+                        <ProFormText
+                            label="Sale Link"
+                            name="bookSaleLink"
                             rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
-                            placeholder="Nhập phone"
+                            placeholder="Nhập sale link"
                         />
                     </Col>
                     <Col lg={6} md={6} sm={24} xs={24}>
-                        <ProFormSelect
-                            name="gender"
-                            label="Giới Tính"
-                            valueEnum={{
-                                MALE: 'Nam',
-                                FEMALE: 'Nữ',
-                                OTHER: 'Khác',
-                            }}
-                            placeholder="Chọn giới tính"
-                            rules={[{ required: true, message: 'Vui lòng chọn giới tính!' }]}
+                        <ProFormText
+                            label="Language"
+                            name="language"
+                            rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
+                            placeholder="Nhập ngôn ngữ"
                         />
                     </Col>
-                    <Col lg={6} md={6} sm={24} xs={24}>
-                        <ProForm.Item
-                            name="role"
-                            label="Vai trò"
-                            rules={[{ required: true, message: 'Vui lòng chọn vai trò!' }]}
-
-                        >
-                            <DebounceSelect
-                                allowClear
-                                showSearch
-                                defaultValue={roles}
-                                value={roles}
-                                placeholder="Chọn vai trò"
-                                fetchOptions={fetchRoleList}
-                                onChange={(newValue) => {
-                                    if (newValue?.length === 0 || newValue?.length === 1) {
-                                        setRoles(newValue);
-                                    }
-                                }}
-                                style={{ width: '100%' }}
-                            />
-                        </ProForm.Item>
-
-                    </Col>
-                    <Col lg={6} md={6} sm={24} xs={24}>
-                        <ProFormDatePicker
-                            label="Ngày sinh"
-                            name="userDOB"
-                            placeholder="Chọn ngày sinh"
-                            fieldProps={{
-                                format: 'DD/MM/YYYY',
-                            }}
+                    <Col lg={8} md={6} sm={24} xs={24}>
+                        <ProFormText
+                            label="Author"
+                            name="author"
+                            rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
+                            placeholder="Nhập tên tác giả"
                         />
                     </Col>
-                    <Col lg={6} md={6} sm={24} xs={24}>
+                    <Col lg={8} md={6} sm={24} xs={24}>
                         <ProFormSelect
                             label="Trạng thái"
                             name="status"
@@ -302,7 +274,8 @@ const ModalUser = (props) => {
                             rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
                         />
                     </Col>
-                    <Col lg={12} md={12} sm={24} xs={24}>
+
+                    <Col lg={8} md={12} sm={24} xs={24}>
                         <ProForm.Item
                             name="image"
                             label="Hình ảnh"
@@ -336,18 +309,44 @@ const ModalUser = (props) => {
                             </Upload>
                         </ProForm.Item>
                     </Col>
-                    <Col lg={12} md={12} sm={24} xs={24}>
-                        <ProFormText
-                            label="Địa chỉ"
-                            name="address"
-                            rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
-                            placeholder="Nhập địa chỉ"
+                    <Col span={12}>
+                        <Form.Item
+                            label={"Category"}
+                            name="categories"
+                            rules={[{ required: true, message: 'Vui lòng chọn ít nhất 1 thể loại!' }]}
+
+                        >
+                            <Select
+                                mode="multiple"
+                                allowClear
+                                suffixIcon={null}
+                                style={{ width: '100%' }}
+                                placeholder={
+                                    <>
+                                        <MonitorOutlined key="icon" /> Tìm theo thể loại...
+                                    </>
+                                }
+                                optionLabelProp="label"
+                                options={optionsCategory}
+                            />
+                        </Form.Item>
+                    </Col>
+                    <Col lg={6} md={6} sm={24} xs={24}>
+                        <ProFormDatePicker
+                            label="Published Date"
+                            name="publishedDate"
+                            placeholder="Chọn ngày xuất bản"
+                            fieldProps={{
+                                format: 'DD/MM/YYYY',
+                            }}
                         />
                     </Col>
+                    
+                    
                 </Row>
             </ModalForm >
         </>
     )
 }
 
-export default ModalUser;
+export default ModalBook;
