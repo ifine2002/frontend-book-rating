@@ -1,32 +1,32 @@
-
-import DataTable from "@/components/client/data-table";
+import DataTable from "./../../components/client/data-table/index";
 import { useAppDispatch, useAppSelector } from "./../../redux/hooks";
-import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { DeleteOutlined, PlusOutlined, EditOutlined } from "@ant-design/icons";
 import { Button, Popconfirm, Space, message, notification } from "antd";
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
 import dayjs from 'dayjs';
-import { callDeleteCategory } from "./../../api/services";
+import { callDeleteRating } from "./../../api/services";
 import queryString from 'query-string';
 import { sfLike } from "spring-filter-query-builder";
-import { fetchCategory } from "../../redux/slice/categorySlice";
-import ModalCategory from "./../../components/admin/category/modal.category";
+import { fetchRating } from "../../redux/slice/ratingSlice";
+import ModalRating from "../../components/admin/rating/modal.rating";
 
-const CategoryPage = () => {
-    const [openModal, setOpenModal] = useState(false);
+const RatingPage = () => {
+
     const [dataInit, setDataInit] = useState(null);
-
     const tableRef = useRef();
 
-    const isFetching = useAppSelector(state => state.category.isFetching);
-    const data = useAppSelector(state => state.category.data);
-    const categories = useAppSelector(state => state.category.result);
+    const [openModal, setOpenModal] = useState(false)
+    const isFetching = useAppSelector(state => state.rating.isFetching);
+    const data = useAppSelector(state => state.rating.data);
+    const ratings = useAppSelector(state => state.rating.result);
+
     const dispatch = useAppDispatch();
 
-    const handleDeleteCategory = async (id) => {
+    const handleDeleteRating = async (id) => {
         if (id) {
-            const res = await callDeleteCategory(id);
-            if (res && +res.status === 200) {
-                message.success('Xóa Category thành công');
+            const res = await callDeleteRating(id);
+            if (res && res.status === 200) {
+                message.success('Xóa Follow thành công');
                 reloadTable();
             } else {
                 notification.error({
@@ -46,6 +46,7 @@ const CategoryPage = () => {
             title: 'Id',
             dataIndex: 'id',
             width: 50,
+            sorter: true,
             render: (text, record, index, action) => {
                 return (
                     <span>
@@ -53,21 +54,26 @@ const CategoryPage = () => {
                     </span>
                 )
             },
-            hideInSearch: true,
+        },
+        {
+            title: 'Stars',
+            dataIndex: 'stars',
             sorter: true,
         },
         {
-            title: 'Name',
-            dataIndex: 'name',
+            title: 'User Id',
+            dataIndex: 'userId',
             sorter: true,
         },
-
         {
-            title: 'Description',
-            dataIndex: 'description',
-            hideInSearch: true,
+            title: 'Book Id',
+            dataIndex: 'bookId',
+            sorter: true,
+            // fieldProps: {
+            //     placeholder: 'Tìm kiếm theo Following Id',
+            //     style: { marginLeft: 5 }
+            // },
         },
-
         {
             title: 'CreatedAt',
             dataIndex: 'createdAt',
@@ -99,7 +105,6 @@ const CategoryPage = () => {
             width: 50,
             render: (_value, entity, _index, _action) => (
                 <Space>
-
                     <EditOutlined
                         style={{
                             fontSize: 20,
@@ -111,12 +116,11 @@ const CategoryPage = () => {
                             setDataInit(entity);
                         }}
                     />
-
                     <Popconfirm
                         placement="leftTop"
-                        title={"Xác nhận xóa category"}
-                        description={"Bạn có chắc chắn muốn xóa category này ?"}
-                        onConfirm={() => handleDeleteCategory(entity.id)}
+                        title={"Xác nhận xóa rating"}
+                        description={"Bạn có chắc chắn muốn xóa rating này ?"}
+                        onConfirm={() => handleDeleteRating(entity.id)}
                         okText="Xác nhận"
                         cancelText="Hủy"
                     >
@@ -136,31 +140,48 @@ const CategoryPage = () => {
     ];
 
     const buildQuery = (params, sort, filter) => {
-        const clone = { ...params };
         const q = {
             page: params.current - 1,
             size: params.pageSize,
             filter: ""
         }
 
-        if (clone.name) q.filter = `${sfLike("name", clone.name)}`;
-        if (!q.filter) delete q.filter;
+        const clone = { ...params };
+        let filterArray = [];
+        
+        if (clone.id) filterArray.push(`${sfLike("id", clone.id)}`);
 
+        if (clone.stars) filterArray.push(`${sfLike("stars", clone.stars)}`);
+
+        if (clone.userId) filterArray.push(`${sfLike("userId", clone.userId)}`);
+
+        if (clone.bookId) filterArray.push(`${sfLike("bookId", clone.bookId)}`);
+        
+        if (filterArray.length > 0) {
+            q.filter = filterArray.join(" and ");
+        }
+
+        if (!q.filter) delete q.filter;
         let temp = queryString.stringify(q);
 
         let sortBy = "";
-        if (sort && sort.name) {
-            sortBy = sort.name === 'ascend' ? "sort=name,asc" : "sort=name,desc";
+        if (sort && sort.id) {
+            sortBy = sort.id === 'ascend' ? "sort=id,asc" : "sort=id,desc";
         }
-
+        if (sort && sort.stars) {
+            sortBy = sort.stars === 'ascend' ? "sort=stars,asc" : "sort=stars,desc";
+        }
+        if (sort && sort.userId) {
+            sortBy = sort.userId === 'ascend' ? "sort=userId,asc" : "sort=userId,desc";
+        }
+        if (sort && sort.bookId) {
+            sortBy = sort.bookId === 'ascend' ? "sort=bookId,asc" : "sort=bookId,desc";
+        }
         if (sort && sort.createdAt) {
             sortBy = sort.createdAt === 'ascend' ? "sort=createdAt,asc" : "sort=createdAt,desc";
         }
         if (sort && sort.updatedAt) {
             sortBy = sort.updatedAt === 'ascend' ? "sort=updatedAt,asc" : "sort=updatedAt,desc";
-        }
-        if (sort && sort.id) {
-            sortBy = sort.id === 'ascend' ? "sort=id,asc" : "sort=id,desc";
         }
 
         //mặc định sort theo updatedAt
@@ -172,19 +193,18 @@ const CategoryPage = () => {
 
         return temp;
     }
-
     return (
         <div>
             <DataTable
                 actionRef={tableRef}
-                headerTitle="Danh sách Category"
+                headerTitle="Danh sách Rating"
                 rowKey="id"
                 loading={isFetching}
                 columns={columns}
-                dataSource={categories}
+                dataSource={ratings}
                 request={async (params, sort, filter) => {
                     const query = buildQuery(params, sort, filter);
-                    dispatch(fetchCategory({ query }))
+                    dispatch(fetchRating({ query }))
                 }}
                 scroll={{ x: true }}
                 pagination={
@@ -209,7 +229,7 @@ const CategoryPage = () => {
                     );
                 }}
             />
-            <ModalCategory
+            <ModalRating
                 openModal={openModal}
                 setOpenModal={setOpenModal}
                 reloadTable={reloadTable}
@@ -220,4 +240,4 @@ const CategoryPage = () => {
     )
 }
 
-export default CategoryPage;
+export default RatingPage;

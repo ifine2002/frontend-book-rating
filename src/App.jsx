@@ -18,6 +18,8 @@ import RolePage from './pages/admin/role';
 import styles from './styles/app.module.scss';
 import CategoryPage from './pages/admin/category';
 import BookPage from './pages/admin/book';
+import FollowPage from './pages/admin/follow';
+import RatingPage from './pages/admin/rating';
 
 const LayoutClient = () => {
 
@@ -85,6 +87,16 @@ export default function App() {
           path: "category",
           element:
             <CategoryPage />
+        },
+        {
+          path: "follow",
+          element:
+            <FollowPage />
+        },
+        {
+          path: "rating",
+          element:
+            <RatingPage />
         }
       ],
     },

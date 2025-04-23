@@ -5,6 +5,8 @@ import permissionReducer from './slice/permissionSlice';
 import roleReducer from './slice/roleSlice';
 import categoryReducer from './slice/categorySlice';
 import bookReducer from './slice/bookSlice';
+import followReducer from './slice/followSlice';
+import ratingReducer from './slice/ratingSlice';
 
 // Tạo store
 export const store = configureStore({
@@ -13,10 +15,10 @@ export const store = configureStore({
         user: userReducer,
         permission: permissionReducer,
         role: roleReducer,
-        // Thêm các reducer khác vào đây khi cần
-        // job: jobReducer,
+        follow: followReducer,
         book: bookReducer,
         category: categoryReducer,
+        rating: ratingReducer
     },
 });
 

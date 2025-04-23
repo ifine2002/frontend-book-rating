@@ -6,10 +6,8 @@ import { useState, useRef } from 'react';
 import dayjs from 'dayjs';
 import { callDeleteBook, callGetBookById } from "./../../api/services";
 import queryString from 'query-string';
-import ViewDetailUser from "./../../components/admin/user/view.user";
 import { sfLike } from "spring-filter-query-builder";
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import ModalUser from "../../components/admin/user/modal.user";
 import ModalBook from "../../components/admin/book/modal.book";
 
 const BookPage = () => {

@@ -1,32 +1,29 @@
-
-import DataTable from "@/components/client/data-table";
+import DataTable from "./../../components/client/data-table/index";
 import { useAppDispatch, useAppSelector } from "./../../redux/hooks";
-import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Popconfirm, Space, message, notification } from "antd";
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
 import dayjs from 'dayjs';
-import { callDeleteCategory } from "./../../api/services";
+import { callDeleteFollow } from "./../../api/services";
 import queryString from 'query-string';
+import { fetchFollow } from "./../../redux/slice/followSlice";
 import { sfLike } from "spring-filter-query-builder";
-import { fetchCategory } from "../../redux/slice/categorySlice";
-import ModalCategory from "./../../components/admin/category/modal.category";
+import ModalFollow from "../../components/admin/follow/modal.follow";
 
-const CategoryPage = () => {
-    const [openModal, setOpenModal] = useState(false);
-    const [dataInit, setDataInit] = useState(null);
-
+const FollowPage = () => {
     const tableRef = useRef();
+    const [openModal, setOpenModal] = useState(false)
+    const isFetching = useAppSelector(state => state.follow.isFetching);
+    const data = useAppSelector(state => state.follow.data);
+    const follows = useAppSelector(state => state.follow.result);
 
-    const isFetching = useAppSelector(state => state.category.isFetching);
-    const data = useAppSelector(state => state.category.data);
-    const categories = useAppSelector(state => state.category.result);
     const dispatch = useAppDispatch();
 
-    const handleDeleteCategory = async (id) => {
+    const handleDeleteFollow = async (id) => {
         if (id) {
-            const res = await callDeleteCategory(id);
-            if (res && +res.status === 200) {
-                message.success('Xóa Category thành công');
+            const res = await callDeleteFollow(id);
+            if (res && res.status === 200) {
+                message.success('Xóa Follow thành công');
                 reloadTable();
             } else {
                 notification.error({
@@ -46,6 +43,7 @@ const CategoryPage = () => {
             title: 'Id',
             dataIndex: 'id',
             width: 50,
+            sorter: true,
             render: (text, record, index, action) => {
                 return (
                     <span>
@@ -53,21 +51,21 @@ const CategoryPage = () => {
                     </span>
                 )
             },
-            hideInSearch: true,
+        },
+        {
+            title: 'Follower Id',
+            dataIndex: 'followerId',
             sorter: true,
         },
         {
-            title: 'Name',
-            dataIndex: 'name',
+            title: 'Following  Id',
+            dataIndex: 'followingId',
             sorter: true,
+            fieldProps: {
+                placeholder: 'Tìm kiếm theo Following Id',
+                style: { marginLeft: 5 }
+            },
         },
-
-        {
-            title: 'Description',
-            dataIndex: 'description',
-            hideInSearch: true,
-        },
-
         {
             title: 'CreatedAt',
             dataIndex: 'createdAt',
@@ -81,15 +79,9 @@ const CategoryPage = () => {
             hideInSearch: true,
         },
         {
-            title: 'UpdatedAt',
-            dataIndex: 'updatedAt',
-            width: 200,
+            title: 'CreatedBy',
+            dataIndex: 'createdBy',
             sorter: true,
-            render: (text, record, index, action) => {
-                return (
-                    <>{record.updatedAt ? dayjs(record.updatedAt).format('DD-MM-YYYY HH:mm:ss') : ""}</>
-                )
-            },
             hideInSearch: true,
         },
         {
@@ -99,24 +91,11 @@ const CategoryPage = () => {
             width: 50,
             render: (_value, entity, _index, _action) => (
                 <Space>
-
-                    <EditOutlined
-                        style={{
-                            fontSize: 20,
-                            color: '#ffa500',
-                        }}
-                        type=""
-                        onClick={() => {
-                            setOpenModal(true);
-                            setDataInit(entity);
-                        }}
-                    />
-
                     <Popconfirm
                         placement="leftTop"
-                        title={"Xác nhận xóa category"}
-                        description={"Bạn có chắc chắn muốn xóa category này ?"}
-                        onConfirm={() => handleDeleteCategory(entity.id)}
+                        title={"Xác nhận xóa follow"}
+                        description={"Bạn có chắc chắn muốn xóa follow này ?"}
+                        onConfirm={() => handleDeleteFollow(entity.id)}
                         okText="Xác nhận"
                         cancelText="Hủy"
                     >
@@ -136,31 +115,45 @@ const CategoryPage = () => {
     ];
 
     const buildQuery = (params, sort, filter) => {
-        const clone = { ...params };
         const q = {
             page: params.current - 1,
             size: params.pageSize,
             filter: ""
         }
 
-        if (clone.name) q.filter = `${sfLike("name", clone.name)}`;
-        if (!q.filter) delete q.filter;
+        const clone = { ...params };
+        let filterArray = [];
+        
+        if (clone.id) filterArray.push(`${sfLike("id", clone.id)}`);
 
+        if (clone.followerId) filterArray.push(`${sfLike("follower.id", clone.followerId)}`);
+
+        if (clone.followingId) filterArray.push(`${sfLike("following.id", clone.followingId)}`);
+
+        if (clone.createdBy) filterArray.push(`${sfLike("createdBy", clone.createdBy)}`);
+        
+        if (filterArray.length > 0) {
+            q.filter = filterArray.join(" and ");
+        }
+
+        if (!q.filter) delete q.filter;
         let temp = queryString.stringify(q);
 
         let sortBy = "";
-        if (sort && sort.name) {
-            sortBy = sort.name === 'ascend' ? "sort=name,asc" : "sort=name,desc";
+        if (sort && sort.id) {
+            sortBy = sort.id === 'ascend' ? "sort=id,asc" : "sort=id,desc";
         }
-
+        if (sort && sort.followerId) {
+            sortBy = sort.followerId === 'ascend' ? "sort=followerId,asc" : "sort=followerId,desc";
+        }
+        if (sort && sort.followingId) {
+            sortBy = sort.followingId === 'ascend' ? "sort=followingId,asc" : "sort=followingId,desc";
+        }
         if (sort && sort.createdAt) {
             sortBy = sort.createdAt === 'ascend' ? "sort=createdAt,asc" : "sort=createdAt,desc";
         }
-        if (sort && sort.updatedAt) {
-            sortBy = sort.updatedAt === 'ascend' ? "sort=updatedAt,asc" : "sort=updatedAt,desc";
-        }
-        if (sort && sort.id) {
-            sortBy = sort.id === 'ascend' ? "sort=id,asc" : "sort=id,desc";
+        if (sort && sort.createdBy) {
+            sortBy = sort.createdBy === 'ascend' ? "sort=createdBy,asc" : "sort=createdBy,desc";
         }
 
         //mặc định sort theo updatedAt
@@ -172,19 +165,18 @@ const CategoryPage = () => {
 
         return temp;
     }
-
     return (
         <div>
             <DataTable
                 actionRef={tableRef}
-                headerTitle="Danh sách Category"
+                headerTitle="Danh sách Follow"
                 rowKey="id"
                 loading={isFetching}
                 columns={columns}
-                dataSource={categories}
+                dataSource={follows}
                 request={async (params, sort, filter) => {
                     const query = buildQuery(params, sort, filter);
-                    dispatch(fetchCategory({ query }))
+                    dispatch(fetchFollow({ query }))
                 }}
                 scroll={{ x: true }}
                 pagination={
@@ -209,15 +201,13 @@ const CategoryPage = () => {
                     );
                 }}
             />
-            <ModalCategory
+            <ModalFollow
                 openModal={openModal}
                 setOpenModal={setOpenModal}
                 reloadTable={reloadTable}
-                dataInit={dataInit}
-                setDataInit={setDataInit}
             />
         </div>
     )
 }
 
-export default CategoryPage;
+export default FollowPage;

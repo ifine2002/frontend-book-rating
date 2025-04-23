@@ -357,3 +357,45 @@ export const callDeleteCategory = (id) => {
 export const callFetchCategory = (query) => {
   return axios.get(`/category/list?${query}`);
 }
+
+
+/**
+ *
+Module Follow
+ */
+export const callCreateFollow = (follow) => {
+  return axios.post(`/follow/?followerId=${follow.followerId}&followingId=${follow.followingId}`);
+}
+
+export const callDeleteFollow = (id) => {
+  return axios.delete(`/follow/${id}`);
+}
+
+export const callFetchFollow = (query) => {
+  return axios.get(`/follow/list?${query}`);
+}
+
+
+/**
+ *
+Module Rating
+ */
+export const callCreateRating = (rating) => {
+  return axios.post(`/review/rating`, {
+    userId: rating.userId,
+    bookId: rating.bookId,
+    stars: rating.stars
+  });
+}
+
+export const callUpdateRating = (rating, id) => {
+  return axios.put(`/review/rating/${id}?stars=${rating.stars}`);
+}
+
+export const callDeleteRating = (id) => {
+  return axios.delete(`/review/rating/${id}`);
+}
+
+export const callFetchRating = (query) => {
+  return axios.get(`/review/rating/list?${query}`);
+}
