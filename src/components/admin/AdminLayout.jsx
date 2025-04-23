@@ -11,7 +11,8 @@ import {
     BugOutlined,
     UserAddOutlined,
     BookOutlined,
-    LikeOutlined
+    LikeOutlined,
+    CommentOutlined
 } from '@ant-design/icons';
 import { Layout, Menu, Dropdown, Space, message, Avatar, Button } from 'antd';
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -82,6 +83,11 @@ const LayoutAdmin = () => {
                 label: <Link to="/admin/rating">Rating</Link>,
                 key: '/admin/rating',
                 icon: <LikeOutlined />
+            },
+            {
+                label: <Link to="/admin/comment">Comment</Link>,
+                key: '/admin/comment',
+                icon: <CommentOutlined />
             }
         ];
 

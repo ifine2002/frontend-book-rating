@@ -20,6 +20,7 @@ import CategoryPage from './pages/admin/category';
 import BookPage from './pages/admin/book';
 import FollowPage from './pages/admin/follow';
 import RatingPage from './pages/admin/rating';
+import CommentPage from './pages/admin/comment';
 
 const LayoutClient = () => {
 
@@ -97,6 +98,11 @@ export default function App() {
           path: "rating",
           element:
             <RatingPage />
+        },
+        {
+          path: "comment",
+          element:
+            <CommentPage />
         }
       ],
     },

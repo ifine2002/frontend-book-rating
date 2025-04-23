@@ -399,3 +399,31 @@ export const callDeleteRating = (id) => {
 export const callFetchRating = (query) => {
   return axios.get(`/review/rating/list?${query}`);
 }
+
+/**
+ *
+Module Comment
+ */
+export const callCreateComment = (comment) => {
+  return axios.post(`/review/comment`, {
+    userId: comment.userId,
+    bookId: comment.bookId,
+    comment: comment.comment,
+    ratingComment: comment.ratingComment
+  });
+}
+
+export const callUpdateComment = (comment, id) => {
+  return axios.put(`/review/comment/${id}`, {
+    comment: comment.comment,
+    ratingComment: comment.ratingComment
+  });
+}
+
+export const callDeleteComment = (id) => {
+  return axios.delete(`/review/comment/${id}`);
+}
+
+export const callFetchComment = (query) => {
+  return axios.get(`/review/comment/list?${query}`);
+}
