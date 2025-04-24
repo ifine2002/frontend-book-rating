@@ -1,0 +1,117 @@
+/* Header Styles */
+.header-section {
+    background-color: #fff;
+    padding: 15px 0;
+    position: sticky;
+    top: 0;
+    z-index: 999;
+  
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 15px;
+  
+      // User section
+      .top-menu {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          
+          .search-container {
+            flex: 1;
+            margin: 0 75px;
+            max-width: 400px;
+            .ant-input {
+              border-radius: 20px;
+            }
+          }
+          
+          .extra {
+            min-width: 120px;
+            text-align: right;
+            
+            a {
+              color: #1890ff;
+              font-weight: 500;
+              text-decoration: none;
+              transition: color 0.3s;
+              font-size: 16px;
+    
+              &:hover {
+                color: #40a9ff;
+              }
+            }
+    
+            .ant-space {
+              span {
+                margin-right: 10px;
+                font-weight: 500;
+              }
+    
+              .ant-avatar {
+                background-color: #1890ff;
+                cursor: pointer;
+                
+                &:hover {
+                  background-color: #40a9ff;
+                }
+              }
+            }
+          }
+      }
+  
+      // Mobile header
+      @media (max-width: 768px) {
+        .header-mobile {
+          display: flex;
+          flex-direction: column;
+          
+          > span {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 10px;
+          }
+          
+          .anticon-menu-fold {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: color 0.3s;
+            
+            &:hover {
+              color: #1890ff;
+            }
+          }
+        }
+      }
+    }
+}
+  
+// Drawer styles
+.ant-drawer {
+  .ant-menu {
+    border-right: none;
+    
+    .ant-menu-item {
+      display: flex;
+      align-items: center;
+      
+      .anticon {
+        font-size: 16px;
+        margin-right: 10px;
+      }
+      
+      &-selected {
+        color: #1890ff;
+        background-color: #e6f7ff;
+      }
+      
+      &:hover {
+        color: #40a9ff;
+      }
+    }
+  }
+}

@@ -238,6 +238,11 @@ export const callGetBookById = (id) => {
   return axios.get(`/book/${id}`);
 }
 
+export const callGetBookDetailById = (id) => {
+  return axios.get(`/book/detail-book/${id}`);
+}
+
+
 /**
  *
 Module Role

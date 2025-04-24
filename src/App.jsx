@@ -21,15 +21,9 @@ import BookPage from './pages/admin/book';
 import FollowPage from './pages/admin/follow';
 import RatingPage from './pages/admin/rating';
 import CommentPage from './pages/admin/comment';
+import LayoutClient from './components/client/ClientLayout';
+import BookDetailPage from './pages/client/BookDetailPage';
 
-const LayoutClient = () => {
-
-  return (
-    <div>
-      Hello everyone
-    </div>
-  )
-}
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -51,6 +45,10 @@ export default function App() {
       element: (<LayoutClient />),
       errorElement: <NotFound />,
       children: [
+        {
+          path: "book/:id",
+      element: <BookDetailPage />
+        }
       ],
     },
 
