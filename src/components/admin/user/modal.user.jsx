@@ -166,8 +166,9 @@ const ModalUser = (props) => {
 
     async function fetchRoleList(name) {
         const res = await callFetchRole(`page=0&size=100&name=/${name}/i`);
+        console.log(res);
         if (res && res.data) {
-            const list = res.data.data.result;
+            const list = res.data.result;
             const temp = list.map(item => {
                 return {
                     label: item.name,
@@ -177,6 +178,8 @@ const ModalUser = (props) => {
             return temp;
         } else return [];
     }
+
+    
 
     return (
         <>

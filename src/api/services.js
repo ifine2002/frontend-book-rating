@@ -432,3 +432,39 @@ export const callDeleteComment = (id) => {
 export const callFetchComment = (query) => {
   return axios.get(`/review/comment/list?${query}`);
 }
+
+/**
+ *
+Module Review
+ */
+export const callCreateReview = (review, bookId) => {
+  return axios.post(`/review/${bookId}`, {
+    stars: review.stars,
+    comment: review.comment,
+  });
+}
+
+export const callDeleteReview = (commentId, ratingId) => {
+  let url = `/review/?ratingId=${ratingId}`;
+  if (commentId) {
+    url += `&commentId=${commentId}`;
+  }
+  return axios.delete(url);
+}
+
+export const callUpdateReview = (commentId, ratingId, review) => {
+  let url = '/review/update-review?';
+  
+  if (ratingId) {
+    url += `ratingId=${ratingId}`;
+  }
+  
+  if (commentId) {
+    url += `${ratingId ? '&' : ''}commentId=${commentId}`;
+  }
+  console.log("url: ", url)
+  return axios.put(url, {
+    stars: review.stars,
+    comment: review.comment
+  });
+}
