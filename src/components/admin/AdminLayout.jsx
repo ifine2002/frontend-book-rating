@@ -12,15 +12,18 @@ import {
     UserAddOutlined,
     BookOutlined,
     LikeOutlined,
-    CommentOutlined
+    CommentOutlined,
+    AuditOutlined
 } from '@ant-design/icons';
-import { Layout, Menu, Dropdown, Space, message, Avatar, Button } from 'antd';
+import { Layout, Menu, Dropdown, Space, message, Avatar, Button, Badge } from 'antd';
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Link } from 'react-router-dom';
 import { isMobile } from 'react-device-detect';
 import { callLogout } from './../../api/services';
 import { setLogoutAction } from './../../redux/slice/accountSlice';
 import { useAppSelector, useAppDispatch } from '../../redux/hooks';
+import SockJS from 'sockjs-client/dist/sockjs';
+import { Client } from '@stomp/stompjs';
 
 const { Content, Sider } = Layout;
 
@@ -29,6 +32,8 @@ const LayoutAdmin = () => {
 
     const [collapsed, setCollapsed] = useState(false);
     const [activeMenu, setActiveMenu] = useState('');
+    const [pendingBooks, setPendingBooks] = useState(0);
+    const [stompClient, setStompClient] = useState(null);
     const user = useAppSelector(state => state.account.user);
 
     const permissions = useAppSelector(state => state.account.user?.role?.permissions || []);
@@ -41,8 +46,62 @@ const LayoutAdmin = () => {
         setActiveMenu(location.pathname)
     }, [location])
 
+    // Kết nối WebSocket để cập nhật số sách đang chờ duyệt
     useEffect(() => {
+        const socket = new SockJS('http://localhost:8080/ws');
+        const client = new Client({
+            webSocketFactory: () => socket,
+            debug: (str) => {
+                console.log(str);
+            },
+            reconnectDelay: 5000,
+            heartbeatIncoming: 4000,
+            heartbeatOutgoing: 4000,
+        });
 
+        client.onConnect = () => {
+            console.log('AdminLayout connected to WebSocket');
+            
+            // Đăng ký nhận thông báo khi có sách mới
+            client.subscribe('/topic/admin-books', (message) => {
+                try {
+                    const notification = JSON.parse(message.body);
+                    console.log('AdminLayout received notification:', notification);
+                    
+                    const action = notification.action;
+                    if (action === 'new') {
+                        // Tăng số lượng sách chờ duyệt
+                        setPendingBooks(prevCount => prevCount + 1);
+                    }
+                } catch (error) {
+                    console.error('Error parsing WebSocket message:', error);
+                }
+            });
+        };
+
+        client.onStompError = (frame) => {
+            console.error('STOMP error:', frame.headers['message']);
+            console.error('Additional details:', frame.body);
+        };
+
+        client.activate();
+        setStompClient(client);
+
+        return () => {
+            if (client) {
+                client.deactivate();
+            }
+        };
+    }, []);
+
+    // Khi chuyển đến trang duyệt sách, đặt lại số lượng sách đang chờ duyệt
+    useEffect(() => {
+        if (location.pathname === '/admin/approval-books') {
+            setPendingBooks(0);
+        }
+    }, [location.pathname]);
+
+    useEffect(() => {
         const items = [
             {
                 label: <Link to="/admin">Dashboard</Link>,
@@ -58,6 +117,20 @@ const LayoutAdmin = () => {
                 label: <Link to="/admin/book">Book</Link>,
                 key: '/admin/book',
                 icon: <BankOutlined />
+            },
+            {
+                label: (
+                    <Link to="/admin/approval-books">
+                        <Space>
+                            Approval Books
+                            {pendingBooks > 0 && (
+                                <Badge count={pendingBooks} style={{ backgroundColor: '#f5222d' }} />
+                            )}
+                        </Space>
+                    </Link>
+                ),
+                key: '/admin/approval-books',
+                icon: <AuditOutlined />
             },
             {
                 label: <Link to="/admin/permission">Permission</Link>,
@@ -91,9 +164,8 @@ const LayoutAdmin = () => {
             }
         ];
 
-
         setMenuItems(items);
-    }, []);
+    }, [pendingBooks]);
 
     const handleLogout = async () => {
         const res = await callLogout();

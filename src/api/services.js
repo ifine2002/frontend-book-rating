@@ -243,6 +243,21 @@ export const callGetBookDetailById = (id) => {
 }
 
 
+// API mới để lấy danh sách sách cần duyệt
+export const callGetApproveBooks = (query) => {
+  return axios.get(`/book/list-none?${query}`);
+}
+
+// API duyệt sách
+export const callApproveBook = (bookId) => {
+  return axios.patch(`/book/approve/${bookId}`);
+}
+
+// API từ chối sách
+export const callRejectBook = (bookId) => {
+  return axios.patch(`/book/reject/${bookId}`);
+}
+
 /**
  *
 Module Role

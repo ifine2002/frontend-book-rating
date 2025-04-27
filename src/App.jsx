@@ -18,6 +18,7 @@ import RolePage from './pages/admin/role';
 import styles from './styles/app.module.scss';
 import CategoryPage from './pages/admin/category';
 import BookPage from './pages/admin/book';
+import ApprovalBooksPage from './pages/admin/approval-books';
 import FollowPage from './pages/admin/follow';
 import RatingPage from './pages/admin/rating';
 import CommentPage from './pages/admin/comment';
@@ -71,6 +72,11 @@ export default function App() {
           path: "book",
           element:
             <BookPage />
+        },
+        {
+          path: "approval-books",
+          element:
+            <ApprovalBooksPage />
         },
         {
           path: "permission",
