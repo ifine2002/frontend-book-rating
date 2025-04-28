@@ -98,13 +98,16 @@ const ModalBook = (props) => {
 
     const submitBook = async (valuesForm) => {
         const { name, description, publishedDate, bookFormat, bookSaleLink, language, author, status, categories } = valuesForm;
-        try {
             if (dataInit?.id) {
                 //update
                 const book = {
                     name,
                     description,
-                    publishedDate,
+                    publishedDate: publishedDate && typeof publishedDate === 'string' 
+                    ? new Date(publishedDate.split('/').reverse().join('-')).toISOString().split('T')[0]
+                    : publishedDate && publishedDate._d
+                      ? new Date(publishedDate._d).toISOString().split('T')[0]
+                      : publishedDate,
                     bookFormat,
                     bookSaleLink,
                     language,
@@ -123,16 +126,27 @@ const ModalBook = (props) => {
                     book.deleteImage = true;
                 }
                 const res = await callUpdateBook(book, dataInit.id);
-                message.success("Cập nhật book thành công");
-                handleReset();
-                reloadTable();
+                if (res && res.data) {
+                    message.success("Cập nhật book thành công");
+                    handleReset();
+                    reloadTable();
+                } else {
+                    notification.error({
+                        message: 'Có lỗi xảy ra',
+                        description: res.message
+                    })
+                }
                     
             } else {
                 //create
                 const book = {
                     name,
                     description,
-                    publishedDate,
+                    publishedDate: publishedDate && typeof publishedDate === 'string' 
+                        ? new Date(publishedDate.split('/').reverse().join('-')).toISOString().split('T')[0]
+                        : publishedDate && publishedDate._d
+                          ? new Date(publishedDate._d).toISOString().split('T')[0]
+                          : publishedDate,
                     bookFormat,
                     bookSaleLink,
                     language,
@@ -148,34 +162,18 @@ const ModalBook = (props) => {
                 }
                 
                 const res = await callCreateBook(book);
-                message.success("Thêm mới book thành công");
-                handleReset();
-                reloadTable();
-            }
-        } catch(error){
-            let errorMessage = 'Có lỗi xảy ra';
-            if (error.response) {
-                if (error.response.data?.message) {
-                    if (Array.isArray(error.response.data.message)) {
-                        errorMessage = error.response.data.message.join(', ');
-                    } else {
-                        errorMessage = error.response.data.message;
-                    }
+                if (res && res.data) {
+                    message.success("Thêm mới book thành công");
+                    handleReset();
+                    reloadTable();
                 } else {
-                    errorMessage = error.message;
+                    notification.error({
+                        message: 'Có lỗi xảy ra',
+                        description: res.message
+                    })
                 }
-            } else if (error.request) {
-                errorMessage = 'Không nhận được phản hồi từ máy chủ';
-            } else {
-                errorMessage = error.message;
             }
-            
-            notification.error({
-                message: 'Có lỗi xảy ra',
-                description: errorMessage,
-                duration: 5
-            });
-        }
+        
     }
 
     const handleReset = async () => {

@@ -12,13 +12,18 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useState } from 'react';
+import BookDetailModal from './BookDetailModal';
+import { useAppSelector } from '../../../redux/hooks';
 
 const { Meta } = Card;
 const { Text, Title, Paragraph } = Typography;
 
 const BookCard = ({ book }) => {
   const [favorite, setFavorite] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const defaultImage = 'https://placehold.co/300x400?text=No+Image';
+  const user = useAppSelector(state => state.account.user);
+  
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -29,40 +34,48 @@ const BookCard = ({ book }) => {
     setFavorite(!favorite);
   };
   
+  const openBookDetailModal = () => {
+    setModalVisible(true);
+  };
+
+  const closeBookDetailModal = () => {
+    setModalVisible(false);
+  };
   
   return (
-    <Card
-      className="mb-4 shadow-md"
-      actions={[
-        <Tooltip title="Đánh giá">
-          <Button type="text" icon={<MessageOutlined />}>
-            {Math.floor(Math.random() * 30)}
-          </Button>
-        </Tooltip>,
-      ]}
-    >
-      <div className="flex items-center mb-4">
-        <Avatar 
-          src={book.avatar} 
-          icon={<UserOutlined />} 
-          size={40}
-        />
-        <div className="ml-3">
-          <Text strong>{book.fullName}</Text>
-          <div>
-            <Text type="secondary" className="text-xs">
-              <CalendarOutlined className="mr-1" />
-              {formatDate(book.updatedAt)}
-            </Text>
+    <>
+      <Card
+        className="mb-7 shadow-md"
+        actions={[
+          <Tooltip title="Đánh giá">
+            <Button type="text" icon={<MessageOutlined />} onClick={openBookDetailModal}>
+              {book.stars.ratingCount}
+            </Button>
+          </Tooltip>,
+        ]}
+      >
+        <div className="flex items-center mb-4">
+          <Avatar 
+            src={book.avatar} 
+            icon={<UserOutlined />} 
+            size={40}
+          />
+          <div className="ml-3">
+            <Text strong>{book.fullName}</Text>
+            <div>
+              <Text type="secondary" className="text-xs">
+                <CalendarOutlined className="mr-1" />
+                {formatDate(book.updatedAt)}
+              </Text>
+            </div>
           </div>
         </div>
-      </div>
 
-      <Link to={`/book/${book.bookId}`} className="hover:underline">
-        <Title level={4} className="mb-2">
-          {book.name}
-        </Title>
-      </Link>
+        <Link to={`/book/${book.bookId}`} className="hover:underline">
+          <Title level={4} className="mb-2">
+            {book.name}
+          </Title>
+        </Link>
         
         <Paragraph 
           ellipsis={{
@@ -75,7 +88,7 @@ const BookCard = ({ book }) => {
           {book.description || 'Không có mô tả cho sách này.'}
         </Paragraph>
       
-        <div className="mb-3 flex gap-4 mt-5">
+        <div className="flex gap-4 mt-5">
           <div>
             <img 
               alt={book.name} 
@@ -135,7 +148,7 @@ const BookCard = ({ book }) => {
             )}
 
             {book.stars && (
-              <div className="flex items-center mt-2">
+              <div className="flex items-center mt-2 cursor-pointer" onClick={openBookDetailModal}>
                 <Text className="mr-2">Đánh giá:</Text>
                 <Rate allowHalf disabled defaultValue={book.stars.averageRating || 0} className="text-sm" />
                 <Text className="ml-2">
@@ -144,11 +157,19 @@ const BookCard = ({ book }) => {
               </div>
             )}
             
-      </Space>
+          </Space>
         </div>
     
    
-    </Card>
+      </Card>
+
+      <BookDetailModal
+        visible={modalVisible}
+        bookId={book.bookId}
+        onCancel={closeBookDetailModal}
+        user={user}
+      />
+    </>
   );
 };
 

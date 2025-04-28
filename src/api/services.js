@@ -190,16 +190,8 @@ export const callUpdateBook = (data, id) => {
     // Thêm flag xóa ảnh
     formData.append('deleteImage', 'true');
   }
-   // Chuyển đổi date thành định dạng ISO cho LocalDate
    if (data.publishedDate) {
-     // Nếu là Date object
-     if (data.publishedDate instanceof Date) {
-       const isoDate = data.publishedDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-       formData.append('publishedDate', isoDate);
-     } else {
-       // Nếu đã là string đúng định dạng
-       formData.append('publishedDate', data.publishedDate);
-     }
+    formData.append('publishedDate', data.publishedDate);
    }
  
    if (data.bookFormat) formData.append('bookFormat', data.bookFormat);

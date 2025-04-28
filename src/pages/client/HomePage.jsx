@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Typography, Row, Col } from 'antd';
+import { Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import SockJS from 'sockjs-client/dist/sockjs';
 import { Client } from '@stomp/stompjs';
@@ -122,7 +122,7 @@ const HomePage = () => {
       const params = {
         page: pageForApi,
         size: pagination.pageSize,
-        sort: 'createdAt,desc' // Mặc định sắp xếp theo ngày tạo, mới nhất trước
+        sort: 'updatedAt,desc' // Mặc định sắp xếp theo ngày tạo, mới nhất trước
       };
 
       // Gọi API
@@ -182,20 +182,8 @@ const HomePage = () => {
   return (
     <div className="bg-gray-100 min-h-screen py-6">
       <div className="container mx-auto px-4">
-        {/* Header */}
-        <Row justify="center" className="mb-6">
-          <Col xs={24} md={16} lg={14}>
-            <Title level={2} className="text-center mb-2">
-              Bảng Tin Sách
-            </Title>
-            <p className="text-center text-gray-500 mb-0">
-              Khám phá và theo dõi các sách mới được đăng tải
-            </p>
-          </Col>
-        </Row>
-
         {/* Debug Info */}
-        <Row justify="center" className="mb-2">
+        {/* <Row justify="center" className="mb-2">
           <Col xs={24} md={16} lg={14}>
             <div style={{ textAlign: 'center', fontSize: '12px', color: '#999' }}>
               Đang hiển thị {books.length} sách | 
@@ -204,7 +192,7 @@ const HomePage = () => {
               {loading ? ' Đang tải...' : ' Sẵn sàng'}
             </div>
           </Col>
-        </Row>
+        </Row> */}
 
         {/* Book List */}
         <BookList

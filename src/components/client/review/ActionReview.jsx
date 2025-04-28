@@ -11,8 +11,9 @@ const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
 const ActionReview = (props) => {
-    const {rating, setRating, comment, setComment, userReview} = props;
-    const { id: bookId } = useParams();
+    const {rating, setRating, comment, setComment, userReview, bookIdModal} = props;
+    const { id: routeBookId } = useParams();
+    const bookId = bookIdModal || routeBookId;
     const [stompClient, setStompClient] = useState(null);
 
     useEffect(() => {
@@ -54,19 +55,17 @@ const ActionReview = (props) => {
 
     const handleSubmitReview = async () => {
         try {
-
             if(userReview){
                 const reviewData = {
                     stars: rating,
                     comment: comment,
                 };
 
-                console.log("reviewData: ", reviewData)
+                console.log("reviewData: ", reviewData);
 
                 await callUpdateReview(userReview.commentId, userReview.ratingId, reviewData);
                 message.success('Đã cập nhật đánh giá thành công');
             }
-
             else {
                 if (!rating) {
                     message.error('Vui lòng chọn số sao đánh giá');
@@ -77,7 +76,7 @@ const ActionReview = (props) => {
                     stars: rating,
                     comment: comment,
                 };
-
+                
                 await callCreateReview(reviewData, bookId);
                 message.success('Đã gửi đánh giá thành công');
             }
