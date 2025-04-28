@@ -25,8 +25,7 @@ import CommentPage from './pages/admin/comment';
 import LayoutClient from './components/client/ClientLayout';
 import BookDetailPage from './pages/client/BookDetailPage';
 import HomePage from './pages/client/HomePage';
-import CreatePage from './pages/client/Create';
-
+import UploadBookPage from './pages/client/UploadBook';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -58,7 +57,7 @@ export default function App() {
         },
         {
           path: "/create",
-          element: <CreatePage />
+          element: <UploadBookPage />
         }
       ],
     },

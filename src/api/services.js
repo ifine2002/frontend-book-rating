@@ -158,6 +158,7 @@ export const callFetchUserDetail = (id) => {
 
   if (data.bookFormat) formData.append('bookFormat', data.bookFormat);
   if (data.bookSaleLink) formData.append('bookSaleLink', data.bookSaleLink);
+  if (data.author) formData.append('author', data.author);
 
   if (data.language) formData.append('language', data.language);
   if (data.status) formData.append('status', data.status);
@@ -250,6 +251,46 @@ export const callRejectBook = (bookId) => {
   return axios.patch(`/book/reject/${bookId}`);
 }
 
+// API upload sách
+export const callUploadBook = (data) => {
+  // Tạo FormData object
+  const formData = new FormData();
+  if (data.name) formData.append('name', data.name);
+  if (data.description) formData.append('description', data.description);
+  // Xử lý file image
+  if (data.image) formData.append('image', data.image);
+  // Chuyển đổi date thành định dạng ISO cho LocalDate
+  if (data.publishedDate) {
+    // Nếu là Date object
+    if (data.publishedDate instanceof Date) {
+      const isoDate = data.publishedDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+      formData.append('publishedDate', isoDate);
+    } else {
+      // Nếu đã là string đúng định dạng
+      formData.append('publishedDate', data.publishedDate);
+    }
+  }
+
+  if (data.bookFormat) formData.append('bookFormat', data.bookFormat);
+  if (data.bookSaleLink) formData.append('bookSaleLink', data.bookSaleLink);
+  if (data.author) formData.append('author', data.author);
+
+  if (data.language) formData.append('language', data.language);
+  if (data.categoryIds) {
+    if (Array.isArray(data.categoryIds)) {
+      data.categoryIds.forEach(categoryId => {
+        formData.append('categoryIds', categoryId);
+      });
+    } else {
+      formData.append('categoryIds', data.categoryIds);
+    }
+  }
+  return axios.post('/book/upload-post', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+}
 /**
  *
 Module Role

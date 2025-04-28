@@ -30,7 +30,7 @@ const DataTable = ({
                 dataSource={dataSource}
                 postData={postData}
                 pagination={pagination}
-                bordered
+                variant="bordered"
                 loading={loading}
                 rowKey={rowKey}
                 scroll={scroll}

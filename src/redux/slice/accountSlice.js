@@ -19,6 +19,7 @@ const initialState = {
         id: "",
         email: "",
         fullName: "",
+        image: "",
         role: {
             id: "",
             name: "",
@@ -45,6 +46,7 @@ export const accountSlide = createSlice({
             state.user.id = action?.payload?.id;
             state.user.email = action?.payload?.email;
             state.user.fullName = action?.payload?.fullName;
+            state.user.image = action?.payload?.image;
             state.user.role = action?.payload?.role;
 
             if (!action?.payload?.role) state.user.role = {};
@@ -82,6 +84,7 @@ export const accountSlide = createSlice({
                 state.user.id = action?.payload?.id;
                 state.user.email = action.payload.email;
                 state.user.fullName = action.payload.fullName;
+                state.user.image = action.payload.image;
                 state.user.role = action?.payload?.role;
                 if (!action?.payload?.role) state.user.role = {};
                 state.user.role.permissions = action?.payload?.role?.permissions ?? [];

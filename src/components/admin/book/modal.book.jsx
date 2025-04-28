@@ -1,11 +1,9 @@
-import { ModalForm, ProForm, ProFormDatePicker, ProFormDigit, ProFormSelect, ProFormText } from "@ant-design/pro-components";
+import { ModalForm, ProForm, ProFormDatePicker, ProFormSelect, ProFormText } from "@ant-design/pro-components";
 import { Col, Form, Row, message, notification, Upload, Select } from "antd";
 import { PlusOutlined, MonitorOutlined  } from '@ant-design/icons';
 import { isMobile } from 'react-device-detect';
 import { useState, useEffect } from "react";
 import { callCreateBook, callFetchCategory, callUpdateBook } from "./../../../api/services";
-import DebounceSelect from "../../share/DebounceSelect";
-import { da } from "date-fns/locale";
 
 const ModalBook = (props) => {
     const { openModal, setOpenModal, reloadTable, dataInit, setDataInit } = props;

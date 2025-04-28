@@ -151,7 +151,19 @@ const BookDetailModal = ({ visible, bookId, onCancel, user }) => {
       width={900}
       footer={null}
       centered
-      bodyStyle={{ maxHeight: '80vh', overflow: 'auto' ,overflow: 'auto', overflowX: 'hidden', padding: '20px 24px' }}
+      styles={{
+        body: {
+          maxHeight: '80vh',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          padding: '20px 24px'
+        },
+        content: {
+          display: 'flex',
+          flexDirection: 'column',
+          maxHeight: 'calc(100vh - 100px)',
+        }
+      }}
     >
       {loading ? (
         <div className="loading-container">Đang tải...</div>

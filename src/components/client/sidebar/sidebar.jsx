@@ -28,6 +28,34 @@ const Sidebar = () => {
     return '';
   };
 
+  const menuItems = [
+    {
+      key: 'home',
+      icon: <HomeOutlined />,
+      label: <Link to="/">Trang chủ</Link>,
+    },
+    {
+      key: 'search',
+      icon: <SearchOutlined />,
+      label: <Link to="/search">Tìm kiếm</Link>,
+    },
+    {
+      key: 'explore',
+      icon: <CompassOutlined />,
+      label: <Link to="/explore">Khám phá</Link>,
+    },
+    {
+      key: 'create',
+      icon: <PlusCircleOutlined />,
+      label: <Link to="/create">Tạo</Link>,
+    },
+    {
+      key: 'profile',
+      icon: <Avatar size={24} icon={<UserOutlined />} />,
+      label: <Link to="/profile">Trang cá nhân</Link>,
+    },
+  ];
+
   return (
     <Sider
       width={220}
@@ -41,23 +69,8 @@ const Sidebar = () => {
         mode="vertical" 
         className="sidebar-menu"
         selectedKeys={[getSelectedKey()]}
-      >
-        <Menu.Item key="home" icon={<HomeOutlined />}>
-          <Link to="/">Trang chủ</Link>
-        </Menu.Item>
-        <Menu.Item key="search" icon={<SearchOutlined />}>
-          <Link to="/search">Tìm kiếm</Link>
-        </Menu.Item>
-        <Menu.Item key="explore" icon={<CompassOutlined />}>
-          <Link to="/explore">Khám phá</Link>
-        </Menu.Item>
-        <Menu.Item key="create" icon={<PlusCircleOutlined />}>
-          <Link to="/create">Tạo</Link>
-        </Menu.Item>
-        <Menu.Item key="profile" icon={<Avatar size={24} icon={<UserOutlined />} />}>
-          <Link to="/profile">Trang cá nhân</Link>
-        </Menu.Item>
-      </Menu>
+        items={menuItems}
+      />
     </Sider>
   );
 };

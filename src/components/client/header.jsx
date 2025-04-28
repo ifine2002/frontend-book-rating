@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { ContactsOutlined, FireOutlined, LogoutOutlined, MenuFoldOutlined, SearchOutlined } from '@ant-design/icons';
-import { Avatar, Drawer, Dropdown, Space, message, Input } from 'antd';
-import { Menu } from 'antd';
+import { ContactsOutlined, FireOutlined, LogoutOutlined, MenuFoldOutlined } from '@ant-design/icons';
+import { Avatar, Drawer, Dropdown, Space, message, Input, Menu } from 'antd';
 import { isMobile } from 'react-device-detect';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from './../../redux/hooks';
 import { callLogout } from './../../api/services';
 import { setLogoutAction } from './../../redux/slice/accountSlice';
 import './../../styles/header.scss';
+
+const { Search } = Input; 
 
 const Header = (props) => {
     const navigate = useNavigate();
@@ -41,7 +41,6 @@ const Header = (props) => {
     }
 
     const handleSearch = (value) => {
-        // Xử lý tìm kiếm sách ở đây
         if (value) {
             navigate(`/search?keyword=${value}`);
         }
@@ -54,17 +53,12 @@ const Header = (props) => {
             icon: <ContactsOutlined />
         },
         {
-            label: <Link
-                to={"/admin"}
-            >Trang Quản Trị</Link>,
+            label: <Link to={"/admin"}>Trang Quản Trị</Link>,
             key: 'admin',
             icon: <FireOutlined />
         },
         {
-            label: <label
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleLogout()}
-            >Đăng xuất</label>,
+            label: <label style={{ cursor: 'pointer' }} onClick={handleLogout}>Đăng xuất</label>,
             key: 'logout',
             icon: <LogoutOutlined />
         },
@@ -76,40 +70,43 @@ const Header = (props) => {
         <>
             <div className="header-section">
                 <div className="container">
-                    {!isMobile ?
-                            <div className='top-menu'>
-                                <div className='search-container'>
-                                    <Input
-                                        placeholder="Tìm kiếm sách..."
-                                        size="large"
-                                        value={searchValue}
-                                        onChange={(e) => setSearchValue(e.target.value)}
-                                        onSearch={handleSearch}
-                                    />
-                                </div>
-                                <div className='extra'>
-                                    {isAuthenticated === false ?
-                                        <Link to={'/login'}>Đăng Nhập</Link>
-                                        :
-                                        <Dropdown menu={{ items: itemsDropdown }} trigger={['click']}>
-                                            <Space style={{ cursor: "pointer" }}>
-                                                <span>Welcome {user?.fullName}</span>
-                                                <Avatar> {user?.fullName?.substring(0, 2)?.toUpperCase()} </Avatar>
-                                            </Space>
-                                        </Dropdown>
-                                    }
-                                </div>
-
+                    {!isMobile ? (
+                        <div className="top-menu">
+                            <div className="search-container">
+                                <Search
+                                    placeholder="Tìm kiếm sách..."
+                                    size="large"
+                                    value={searchValue}
+                                    onChange={(e) => setSearchValue(e.target.value)}
+                                    onSearch={handleSearch}
+                                    enterButton={false}
+                                    suffix={null}
+                                />
+                                
                             </div>
-                        :
-                        <div className={'header-mobile'}>
+                            <div className="extra">
+                                {!isAuthenticated ? (
+                                    <Link to="/login">Đăng Nhập</Link>
+                                ) : (
+                                    <Dropdown menu={{ items: itemsDropdown }} trigger={['click']}>
+                                        <Space style={{ cursor: "pointer" }}>
+                                            <span>Welcome {user?.fullName}</span>
+                                            <Avatar>{user?.fullName?.substring(0, 2)?.toUpperCase()}</Avatar>
+                                        </Space>
+                                    </Dropdown>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="header-mobile">
                             <span>Your APP</span>
                             <MenuFoldOutlined onClick={() => setOpenMobileMenu(true)} />
                         </div>
-                    }
+                    )}
                 </div>
             </div>
-            <Drawer title="Chức năng"
+            <Drawer
+                title="Chức năng"
                 placement="right"
                 onClose={() => setOpenMobileMenu(false)}
                 open={openMobileMenu}
@@ -122,7 +119,7 @@ const Header = (props) => {
                 />
             </Drawer>
         </>
-    )
+    );
 };
 
 export default Header;

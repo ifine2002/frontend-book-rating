@@ -47,9 +47,9 @@ const BookCard = ({ book }) => {
       <Card
         className="mb-7 shadow-md"
         actions={[
-          <Tooltip title="Đánh giá">
+          <Tooltip key="rating-tooltip" title="Đánh giá">
             <Button type="text" icon={<MessageOutlined />} onClick={openBookDetailModal}>
-              {book.stars.ratingCount}
+              {book.stars?.ratingCount || 0}
             </Button>
           </Tooltip>,
         ]}
@@ -139,8 +139,12 @@ const BookCard = ({ book }) => {
             {book.categories && book.categories.length > 0 && (
               <div className="mt-3">
                 <Text className="mr-2">Thể loại:</Text>
-                {book.categories.map(category => (
-                  <Tag key={category.categoryId} color="blue" className="mb-1">
+                {book.categories.map((category, index) => (
+                  <Tag 
+                    key={`${category.categoryId || category.id || 'cat'}-${index}-${book.bookId}`} 
+                    color="blue" 
+                    className="mb-1"
+                  >
                     {category.name}
                   </Tag>
                 ))}
@@ -152,7 +156,7 @@ const BookCard = ({ book }) => {
                 <Text className="mr-2">Đánh giá:</Text>
                 <Rate allowHalf disabled defaultValue={book.stars.averageRating || 0} className="text-sm" />
                 <Text className="ml-2">
-                  ({book.stars.ratingCount || 0})
+                  ({book.stars?.ratingCount || 0})
                 </Text>
               </div>
             )}

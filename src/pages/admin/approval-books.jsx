@@ -51,8 +51,9 @@ const ApprovalBooksPage = () => {
                     // Phân biệt loại thông báo dựa trên action
                     const action = notificationData.action;
                     
-                    if (action === 'new') {
+                    if (action === 'create') {
                         const newBook = notificationData.data;
+                        console.log("check newBook:", newBook)
                         // Cập nhật danh sách sách nếu đang ở trang đầu tiên
                         if (data.page === 1) {
                             setBooks(prevBooks => {
