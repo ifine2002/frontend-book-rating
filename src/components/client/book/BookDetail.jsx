@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Row, Col, Typography, Rate, Tag, Button, Divider, Card, List, Avatar, Input, Dropdown, Popconfirm } from 'antd';
-import { ShoppingCartOutlined, HeartOutlined, HeartFilled, StarOutlined, MoreOutlined } from '@ant-design/icons';
+import { Row, Col, Typography, Rate, Button, Divider, Input} from 'antd';
+import { ShoppingCartOutlined, HeartOutlined, HeartFilled } from '@ant-design/icons';
 import { callGetBookDetailById } from '../../../api/services';
 import { useParams } from 'react-router-dom';
 import './BookDetail.scss';

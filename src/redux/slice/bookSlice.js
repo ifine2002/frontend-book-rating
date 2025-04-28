@@ -52,9 +52,16 @@ export const bookSlice = createSlice({
 
         builder.addCase(fetchBook.fulfilled, (state, action) => {
             if (action.payload && action.payload.data) {
-
                 state.isFetching = false;
-                state.data = action.payload.data;
+                
+                // Cập nhật theo các trường chính xác từ API
+                state.data = {
+                    page: action.payload.data.page,
+                    pageSize: action.payload.data.pageSize,
+                    pages: action.payload.data.totalPages,
+                    total: action.payload.data.totalElements
+                };
+                
                 state.result = action.payload.data.result;
             }
             // Add user to the state array

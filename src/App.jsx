@@ -24,6 +24,8 @@ import RatingPage from './pages/admin/rating';
 import CommentPage from './pages/admin/comment';
 import LayoutClient from './components/client/ClientLayout';
 import BookDetailPage from './pages/client/BookDetailPage';
+import HomePage from './pages/client/HomePage';
+import CreatePage from './pages/client/Create';
 
 
 export default function App() {
@@ -47,8 +49,16 @@ export default function App() {
       errorElement: <NotFound />,
       children: [
         {
+          index: true,
+          element: <HomePage />
+        },
+        {
           path: "book/:id",
-      element: <BookDetailPage />
+          element: <BookDetailPage />
+        },
+        {
+          path: "/create",
+          element: <CreatePage />
         }
       ],
     },

@@ -87,7 +87,7 @@ const BookDetailModal = (props) => {
                                 <Image
                                     width={50}
                                     height={40}
-                                    src={bookDetail.avatar}
+                                    src={bookDetail.avatar || 'http://localhost:9000/book-rating/avatar.png'}
                                     alt="user avatar"
                                     style={{ borderRadius: '50%', marginRight: '12px' }}
                                 />

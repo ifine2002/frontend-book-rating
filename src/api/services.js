@@ -483,3 +483,10 @@ export const callUpdateReview = (commentId, ratingId, review) => {
     comment: review.comment
   });
 }
+
+/**
+ * Home Page
+ */
+export const callGetHomeBooks = (query) => {
+  return axios.get(`/book/home-page?${query}`);
+}

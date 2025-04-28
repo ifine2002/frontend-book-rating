@@ -227,6 +227,8 @@ const BookPage = () => {
                 request={async (params, sort, filter) => {
                     const query = buildQuery(params, sort, filter);
                     dispatch(fetchBook({ query }))
+                    console.log("Current params:", params);
+                    console.log("API data:", data);
                 }}
                 scroll={{ x: true }}
                 pagination={
@@ -235,7 +237,9 @@ const BookPage = () => {
                         pageSize: data.pageSize,
                         showSizeChanger: true,
                         total: data.total,
-                        showTotal: (total, range) => { return (<div> {range[0]}-{range[1]} trên {total} rows</div>) }
+                        showTotal: (total, range) => { 
+                            return (<div> {range[0]}-{range[1]} trên {total} rows</div>);
+                        },
                     }
                 }
                 rowSelection={false}
