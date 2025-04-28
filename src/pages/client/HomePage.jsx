@@ -57,6 +57,28 @@ const HomePage = () => {
           console.error('Error parsing WebSocket message:', error);
         }
       });
+      
+      // Subscribe đến topic duyệt sách từ trang admin approval
+      client.subscribe('/topic/admin-books', (message) => {
+        try {
+          const notificationData = JSON.parse(message.body);
+          if (notificationData.action === 'approve') {
+            const approvedBook = notificationData.data;
+            setBooks(prevBooks => {
+              if (prevBooks.some(book => book.bookId === approvedBook.bookId)) {
+                return prevBooks;
+              }
+              return [approvedBook, ...prevBooks];
+            });
+            setPagination(prev => ({
+              ...prev,
+              totalElements: prev.totalElements + 1
+            }));
+          }
+        } catch (error) {
+          console.error('Error parsing admin book WebSocket message:', error);
+        }
+      });
     };
 
     // Khi mất kết nối
