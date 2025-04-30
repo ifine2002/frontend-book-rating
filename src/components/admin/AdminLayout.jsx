@@ -69,7 +69,7 @@ const LayoutAdmin = () => {
                     console.log('AdminLayout received notification:', notification);
                     
                     const action = notification.action;
-                    if (action === 'new') {
+                    if (action === 'create') {
                         // Tăng số lượng sách chờ duyệt
                         setPendingBooks(prevCount => prevCount + 1);
                     }

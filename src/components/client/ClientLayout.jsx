@@ -21,7 +21,7 @@ const LayoutClient = () => {
                 >
                     <Sidebar />
                 </Sider>
-                <Layout style={{ marginLeft: 220 }}>
+                <Layout style={{ marginLeft: 220 }} className="client-layout">
                     <Header />
                     <Content style={{ padding: '0 24px' }}>
                         <Outlet />

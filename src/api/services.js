@@ -523,3 +523,17 @@ export const callUpdateReview = (commentId, ratingId, review) => {
 export const callGetHomeBooks = (query) => {
   return axios.get(`/book/home-page?${query}`);
 }
+
+/**
+ * Search Home Page
+ */
+export const callSearchHomeBook = (query) => {
+  return axios.get(`/book/search?${query}`);
+}
+
+/**
+ * Search User
+ */
+export const callSearchUser = (query) => {
+  return axios.get(`/user/search?${query}`);
+}

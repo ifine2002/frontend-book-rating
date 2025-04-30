@@ -26,6 +26,8 @@ import LayoutClient from './components/client/ClientLayout';
 import BookDetailPage from './pages/client/BookDetailPage';
 import HomePage from './pages/client/HomePage';
 import UploadBookPage from './pages/client/UploadBook';
+import './styles/global.css'
+import SearchPage from './pages/client/SearchPage';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -54,6 +56,10 @@ export default function App() {
         {
           path: "book/:id",
           element: <BookDetailPage />
+        },
+        {
+          path: "/search",
+          element: <SearchPage />
         },
         {
           path: "/create",
