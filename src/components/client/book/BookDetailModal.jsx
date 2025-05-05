@@ -164,6 +164,7 @@ const BookDetailModal = ({ visible, bookId, onCancel, user }) => {
           maxHeight: 'calc(100vh - 100px)',
         }
       }}
+      getContainer={false} 
     >
       {loading ? (
         <div className="loading-container">Đang tải...</div>

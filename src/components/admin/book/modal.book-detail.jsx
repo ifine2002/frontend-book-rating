@@ -36,6 +36,7 @@ const BookDetailModal = (props) => {
                     </Button>,
                 ]}
                 width={800}
+                getContainer={false}
             >
                 {bookDetail && (
                     <div className="book-detail">

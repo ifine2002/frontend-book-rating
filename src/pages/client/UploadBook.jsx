@@ -6,7 +6,7 @@ import { callUploadBook, callFetchCategory } from '../../api/services';
 import dayjs from 'dayjs';
 import SockJS from 'sockjs-client/dist/sockjs';
 import { Client } from '@stomp/stompjs';
-import './UploadBook.scss';
+import '../../styles/UploadBook.scss';
 import { useAppSelector } from '../../redux/hooks';
 
 const { Title, Text } = Typography;
@@ -158,7 +158,7 @@ const UploadBookPage = () => {
     };
 
     return (
-        <div className="upload-book-container">
+        <div className="upload-book-container min-h-screen">
             <div className="upload-book-content">
                 <div className="upload-header">
                     <Title level={2}>Thư viện sách của bạn</Title>
@@ -204,6 +204,7 @@ const UploadBookPage = () => {
                     className="upload-book-modal"
                     closable={false}
                     destroyOnClose
+                    getContainer={false}
                 >
                     <div className="modal-content">
                         <div className="upload-image-container">

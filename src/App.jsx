@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   createBrowserRouter,
-  Outlet,
-  RouterProvider,
-  useLocation,
+  RouterProvider
 } from "react-router-dom";
 import DashboardPage from './pages/admin/dashboard';
 import NotFound from './components/share/notfound';
@@ -26,12 +24,13 @@ import LayoutClient from './components/client/ClientLayout';
 import BookDetailPage from './pages/client/BookDetailPage';
 import HomePage from './pages/client/HomePage';
 import UploadBookPage from './pages/client/UploadBook';
-import './styles/global.css'
+// import './styles/global.css'
 import SearchPage from './pages/client/SearchPage';
+import ProfilePage from './pages/client/ProfilePage';
+import MyProfile from './pages/client/MyProfile';
 
 export default function App() {
   const dispatch = useAppDispatch();
-  const isLoading = useAppSelector(state => state.account.isLoading);
 
   useEffect(() => {
     if (
@@ -64,6 +63,14 @@ export default function App() {
         {
           path: "/create",
           element: <UploadBookPage />
+        },
+        {
+          path: "/profile/:id",
+          element: <ProfilePage />
+        },
+        {
+          path: "/my-profile",
+          element: <MyProfile/>
         }
       ],
     },

@@ -132,6 +132,10 @@ export const callFetchUserDetail = (id) => {
   return axios.get(`/user/detail/${id}`);
 }
 
+export const callFetchUserProfile = (id) => {
+  return axios.get(`/user/profile/${id}`);
+}
+
 /**
  *
  *Module Book
@@ -290,6 +294,11 @@ export const callUploadBook = (data) => {
       'Content-Type': 'multipart/form-data'
     }
   });
+}
+
+//API call fetch all post of user
+export const callGetAllPostOfUser = (email, query) => {
+  return axios.get(`/book/list-book-user?email=${encodeURIComponent(email)}${query ? `&${query}` : ''}`);
 }
 /**
  *

@@ -79,6 +79,7 @@ const ModalRole = (props) => {
                     width: isMobile ? "100%" : 900,
                     keyboard: false,
                     maskClosable: false,
+                    getContainer: false,
 
                 }}
                 scrollToFirstError={true}

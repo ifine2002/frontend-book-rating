@@ -56,12 +56,12 @@ const BookCard = ({ book }) => {
       >
         <div className="flex items-center mb-4">
           <Avatar 
-            src={book.avatar} 
+            src={book.user.image} 
             icon={<UserOutlined />} 
             size={40}
           />
           <div className="ml-3">
-            <Text strong>{book.fullName}</Text>
+            <Text strong>{book.user.fullName}</Text>
             <div>
               <Text type="secondary" className="text-xs">
                 <CalendarOutlined className="mr-1" />

@@ -136,6 +136,16 @@
   }
 }
 
+/* Fix cho vấn đề thanh scroll biến mất và header bị dịch chuyển */
+body.ant-modal-open {
+  padding-right: 0 !important;
+  overflow: auto !important;
+}
+
+.ant-modal {
+  top: 20px;
+}
+
 /* Search results styling */
 .search-results-container {
   width: 350px;

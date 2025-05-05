@@ -52,7 +52,7 @@ const Sidebar = () => {
     {
       key: 'profile',
       icon: <Avatar size={24} icon={<UserOutlined />} />,
-      label: <Link to="/profile">Trang cá nhân</Link>,
+      label: <Link to="/my-profile">Trang cá nhân</Link>,
     },
   ];
 

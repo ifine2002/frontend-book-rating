@@ -77,7 +77,8 @@ const ModalPermission = (props) => {
                     keyboard: false,
                     maskClosable: false,
                     okText: <>{dataInit?.id ? "Cập nhật" : "Tạo mới"}</>,
-                    cancelText: "Hủy"
+                    cancelText: "Hủy",
+                    getContainer: false
                 }}
                 scrollToFirstError={true}
                 preserve={false}

@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Input, Tabs, Pagination, Empty, Spin, Button, Rate } from 'antd';
+import React, { useState, useEffect, useRef } from 'react';
+import { Input, Tabs, Pagination, Empty, Spin, Rate } from 'antd';
 import { callSearchHomeBook, callSearchUser } from './../../api/services';
-import BookCard from '../../components/client/book/BookCard';
 import './../../components/client/book/BookDetail.scss';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 
@@ -25,13 +24,19 @@ const SearchPage = () => {
         total: 0
     });
 
+    const isUrlUpdate = useRef(false);
+    const isInitialMount = useRef(true);
+
     const navigate = useNavigate();
     const location = useLocation();
     
+    // Xử lý URL parameters và tải dữ liệu ban đầu
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const query = params.get('query') || params.get('keyword') || '';
         const tab = params.get('tab') || 'books';
+        
+        isUrlUpdate.current = true;
         
         setSearchText(query);
         setActiveTab(tab);
@@ -43,11 +48,17 @@ const SearchPage = () => {
                 fetchUsers(query, 0);
             }
         }
+        
+        setTimeout(() => {
+            isUrlUpdate.current = false;
+        }, 100);
     }, [location.search]);
 
+    // Xử lý nút tìm kiếm được nhấn
     const handleSearch = (value) => {
         if (!value.trim()) return;
-        setSearchText(value);
+        
+        isUrlUpdate.current = true;
         navigate(`/search?keyword=${encodeURIComponent(value)}&tab=${activeTab}`);
         
         if (activeTab === 'books') {
@@ -55,23 +66,35 @@ const SearchPage = () => {
         } else {
             fetchUsers(value, 0);
         }
+        
+        setTimeout(() => {
+            isUrlUpdate.current = false;
+        }, 100);
     };
 
+    // Xử lý khi chuyển tab
     const handleTabChange = (key) => {
-        setActiveTab(key);
-        navigate(`/search?keyword=${encodeURIComponent(searchText)}&tab=${key}`);
+        if (key === activeTab) return;
         
-        if (key === 'books' && searchText) {
-            fetchBooks(searchText, 0);
-        } else if (key === 'users' && searchText) {
-            fetchUsers(searchText, 0);
+        setActiveTab(key);
+        
+        if (searchText) {
+            navigate(`/search?keyword=${encodeURIComponent(searchText)}&tab=${key}`);
+            
+            if (key === 'books') {
+                fetchBooks(searchText, 0);
+            } else {
+                fetchUsers(searchText, 0);
+            }
         }
     };
 
+    // Hàm gọi API tìm sách
     const fetchBooks = async (query, page) => {
+        if (!query.trim()) return;
+        
         try {
             setLoading(true);
-            await new Promise(resolve => setTimeout(resolve, 500));
             const queryParams = `page=${page}&size=${bookPagination.pageSize}&keyword=${encodeURIComponent(query.trim())}`;
             const res = await callSearchHomeBook(queryParams);
             
@@ -90,10 +113,12 @@ const SearchPage = () => {
         }
     };
 
+    // Hàm gọi API tìm người dùng
     const fetchUsers = async (query, page) => {
+        if (!query.trim()) return;
+        
         try {
             setLoading(true);
-            await new Promise(resolve => setTimeout(resolve, 500));
             
             const queryParams = `page=${page}&size=${userPagination.pageSize}&keyword=${encodeURIComponent(query.trim())}`;
             
@@ -113,22 +138,29 @@ const SearchPage = () => {
         }
     };
 
+    // Xử lý phân trang sách
     const handleBookPageChange = (page) => {
         fetchBooks(searchText, page-1);
     };
 
+    // Xử lý phân trang người dùng
     const handleUserPageChange = (page) => {
         fetchUsers(searchText, page-1);
     };
 
+    // Xử lý thay đổi input - chỉ cập nhật state, không gọi tìm kiếm
+    const handleInputChange = (e) => {
+        setSearchText(e.target.value);
+    };
+
     return (
-        <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="max-w-7xl mx-auto px-4 py-6 min-h-screen">
             <div className="w-full">
                 <h1 className="text-2xl font-semibold mb-5">Tìm kiếm</h1>
                 <Search
                     placeholder="Nhập từ khóa tìm kiếm..."
                     value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
+                    onChange={handleInputChange}
                     onSearch={handleSearch}
                     enterButton
                     size="large"
@@ -183,7 +215,7 @@ const SearchPage = () => {
                                     )}
                                 </>
                             ) : (
-                                <Empty description={searchText ? "Không tìm thấy sách nào" : "Vui lòng nhập từ khóa để tìm kiếm"} />
+                                <Empty description={searchText ? "Không tìm thấy sách nào" : "Vui lòng nhập từ khóa và nhấn tìm kiếm"} />
                             )}
                         </Spin>
                     </TabPane>
@@ -227,7 +259,7 @@ const SearchPage = () => {
                                     <Empty description="Không tìm thấy người dùng nào" />
                                 )
                             ) : (
-                                <Empty description="Vui lòng nhập từ khóa để tìm kiếm" />
+                                <Empty description="Vui lòng nhập từ khóa và nhấn tìm kiếm" />
                             )}
                         </Spin>
                     </TabPane>

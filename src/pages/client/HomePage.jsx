@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Typography } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import SockJS from 'sockjs-client/dist/sockjs';
 import { Client } from '@stomp/stompjs';
 import queryString from 'query-string';

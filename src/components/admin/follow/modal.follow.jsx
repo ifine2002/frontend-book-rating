@@ -50,7 +50,8 @@ const ModalFollow = (props) => {
                     keyboard: false,
                     maskClosable: false,
                     okText: <>{"Tạo mới"}</>,
-                    cancelText: "Hủy"
+                    cancelText: "Hủy",
+                    getContainer: false
 
                 }}
                 scrollToFirstError={true}

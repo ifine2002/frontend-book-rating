@@ -7,6 +7,8 @@ import { useAppDispatch, useAppSelector } from './../../redux/hooks';
 import { callLogout, callSearchHomeBook } from './../../api/services';
 import { setLogoutAction } from './../../redux/slice/accountSlice';
 import './../../styles/header.scss';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, switchMap } from 'rxjs/operators';
 
 const { Search } = Input; 
 
@@ -15,6 +17,7 @@ const Header = () => {
     const dispatch = useAppDispatch();
     const location = useLocation();
     const searchRef = useRef(null);
+    const searchSubject = useRef(new Subject());
 
     // App state
     const isAuthenticated = useAppSelector(state => state.account.isAuthenticated);
@@ -48,6 +51,42 @@ const Header = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // RxJS search subscription
+    useEffect(() => {
+        const subscription = searchSubject.current.pipe(
+            // Bỏ qua các giá trị không cần thiết
+            filter(value => typeof value === 'string'),
+            // Loại bỏ các giá trị trùng lặp
+            distinctUntilChanged(),
+            // Đợi 500ms trước khi thực hiện tìm kiếm
+            debounceTime(500),
+            // Lọc các giá trị rỗng hoặc quá ngắn
+            filter(value => value.trim().length >= 2),
+            // Chuyển đổi query thành API call và hủy các request cũ nếu có query mới
+            switchMap(value => {
+                setLoading(true);
+                setPopoverVisible(true);
+                const query = `page=${currentPage}&size=${pageSize}&keyword=${encodeURIComponent(value.trim())}`;
+                return callSearchHomeBook(query);
+            })
+        ).subscribe({
+            next: (res) => {
+                if (res?.data) {
+                    setSearchResults(res.data.result || []);
+                    setTotalItems(res.data.totalElements || 0);
+                }
+                setLoading(false);
+            },
+            error: (err) => {
+                console.error("Lỗi khi tìm kiếm sách:", err);
+                setLoading(false);
+            }
+        });
+
+        // Cleanup subscription khi component unmount
+        return () => subscription.unsubscribe();
+    }, [currentPage]);
+
     // Event handlers
     const handleMenuClick = (e) => {
         setCurrent(e.key);
@@ -74,30 +113,13 @@ const Header = () => {
         }
     };
 
-    const handleSearchInput = async (e) => {
+    const handleSearchInput = (e) => {
         const value = e.target.value;
         setSearchValue(value);
         
         if (value.trim().length >= 2) {
-            setLoading(true);
-            setPopoverVisible(true);
-            
-            try {
-                // Thêm độ trễ nhỏ để hiệu ứng loading hiển thị rõ hơn (tùy chọn)
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                const query = `page=${currentPage}&size=${pageSize}&keyword=${encodeURIComponent(value.trim())}`;
-                const res = await callSearchHomeBook(query);
-                
-                if (res?.data) {
-                    setSearchResults(res.data.result || []);
-                    setTotalItems(res.data.totalElements || 0);
-                }
-            } catch (error) {
-                console.error("Lỗi khi tìm kiếm sách:", error);
-            } finally {
-                setLoading(false);
-            }
+            // Push value vào RxJS Subject
+            searchSubject.current.next(value);
         } else {
             setPopoverVisible(false);
             setSearchResults([]);
