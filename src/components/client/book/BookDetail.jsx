@@ -78,6 +78,7 @@ const BookDetail = () => {
       client.subscribe(`/topic/reviews/${id}`, (message) => {
         if (message.body) {
           const notification = JSON.parse(message.body);
+          console.log("BookDetail nhận thông báo WebSocket:", notification);
           
           const { action, data, timestamp } = notification;
           
@@ -110,9 +111,10 @@ const BookDetail = () => {
         client.deactivate();
       }
     };
-  }, [id, user.id, fetchBookDetail]);
+  }, [id, user?.id, fetchBookDetail]);
 
   const handleReviewCreateOrUpdate = (reviewData) => {
+    console.log("Xử lý cập nhật review:", reviewData);
     
     setListReview(prevReviews => {
       const existingReviewIndex = prevReviews.findIndex(r => r.userId === reviewData.userId);
@@ -131,7 +133,7 @@ const BookDetail = () => {
       }
     });
     
-    if (reviewData.userId === user.id) {
+    if (user?.id && reviewData.userId === user.id) {
       setUserReview(reviewData);
       setRating(reviewData.stars || 0);
       setComment(reviewData.comment || '');
@@ -139,12 +141,13 @@ const BookDetail = () => {
   };
 
   const handleReviewDelete = (userId) => {
+    console.log("Xử lý xóa review của user:", userId);
     
     setListReview(prevReviews => 
       prevReviews.filter(review => review.userId !== userId)
     );
     
-    if (user.id === userId) {
+    if (user?.id && user.id === userId) {
       setUserReview(null);
       setRating(0);
       setComment('');

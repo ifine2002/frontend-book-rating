@@ -190,7 +190,7 @@ const SearchPage = () => {
                                                         Tác giả: {book.author}
                                                     </div>
                                                     <div className="flex items-center mb-2">
-                                                        <Rate allowHalf disabled defaultValue={book.averageRating || 0} className="text-sm" /> 
+                                                        <Rate allowHalf disabled value={book.averageRating || 0} className="text-sm" /> 
                                                         <span className="text-xs text-gray-500 ml-3">
                                                             {book.averageRating || 0} avg rating — {book.ratingCount || 0} ratings
                                                         </span>

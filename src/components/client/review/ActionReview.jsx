@@ -32,7 +32,9 @@ const ActionReview = (props) => {
             // Đăng ký nhận thông báo từ topic reviews
             client.subscribe(`/topic/reviews/${bookId}`, (message) => {
                 if (message.body) {
-                    const newReview = JSON.parse(message.body);
+                    const notification = JSON.parse(message.body);
+                    console.log("Nhận được thông báo WebSocket:", notification);
+                    // Không cần xử lý ở đây vì BookDetail đã xử lý và cập nhật state
                 }
             });
         };

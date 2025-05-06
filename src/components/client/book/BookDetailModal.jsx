@@ -17,6 +17,7 @@ const BookDetailModal = ({ visible, bookId, onCancel, user }) => {
   const [listReview, setListReview] = useState([]);
   const [userReview, setUserReview] = useState(null);
   const [stars, setStars] = useState(null);
+  const [isDataUpdated, setIsDataUpdated] = useState(false);
 
   const fetchBookDetail = useCallback(async (showLoading = true) => {
     if (!bookId) return;
@@ -28,6 +29,7 @@ const BookDetailModal = ({ visible, bookId, onCancel, user }) => {
       setListReview(response.data.reviews);
       if (showLoading) setLoading(false);
       setStars(response.data.stars);
+      setIsDataUpdated(true);
     } catch (error) {
       console.error('Error fetching book details:', error);
       if (showLoading) setLoading(false);
@@ -69,9 +71,12 @@ const BookDetailModal = ({ visible, bookId, onCancel, user }) => {
     });
 
     client.onConnect = () => {
+      console.log(`BookDetailModal: Đã kết nối WebSocket cho book ${bookId}`);
+      
       client.subscribe(`/topic/reviews/${bookId}`, (message) => {
         if (message.body) {
           const notification = JSON.parse(message.body);
+          console.log("BookDetailModal nhận thông báo WebSocket:", notification);
           
           const { action, data, timestamp } = notification;
           
@@ -102,11 +107,14 @@ const BookDetailModal = ({ visible, bookId, onCancel, user }) => {
     return () => {
       if (client && client.connected) {
         client.deactivate();
+        console.log(`BookDetailModal: Đã ngắt kết nối WebSocket cho book ${bookId}`);
       }
     };
   }, [visible, bookId, user?.id, fetchBookDetail]);
 
   const handleReviewCreateOrUpdate = (reviewData) => {
+    console.log("BookDetailModal: Xử lý cập nhật review:", reviewData);
+    
     setListReview(prevReviews => {
       const existingReviewIndex = prevReviews.findIndex(r => r.userId === reviewData.userId);
       
@@ -137,6 +145,8 @@ const BookDetailModal = ({ visible, bookId, onCancel, user }) => {
   };
 
   const handleReviewDelete = (userId) => {
+    console.log("BookDetailModal: Xử lý xóa review của user:", userId);
+    
     setListReview(prevReviews => 
       prevReviews.filter(review => review.userId !== userId)
     );
@@ -154,38 +164,50 @@ const BookDetailModal = ({ visible, bookId, onCancel, user }) => {
     }
   };
 
-  // Quản lý scroll khi modal mở/đóng
-  useEffect(() => {
-    if (visible) {
-      // Lưu vị trí scroll hiện tại
-      const scrollY = window.scrollY;
-      
-      // Thêm class và style để "đóng băng" scroll position
-      document.body.classList.add('modal-open');
-      document.body.style.top = `-${scrollY}px`;
+  // Xử lý khi đóng modal
+  const handleClose = () => {
+    // Nếu dữ liệu đã được cập nhật, gọi onCancel để cập nhật phía BookCard
+    if (isDataUpdated) {
+      onCancel(stars);
     } else {
-      // Lấy vị trí scroll đã lưu
-      const scrollY = document.body.style.top;
-      
-      // Xóa class và style
-      document.body.classList.remove('modal-open');
-      document.body.style.top = '';
-      
-      // Khôi phục vị trí scroll
-      window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
+      onCancel();
     }
+    // Reset lại trạng thái đã cập nhật
+    setIsDataUpdated(false);
+  };
 
-    return () => {
-      document.body.classList.remove('modal-open');
-      document.body.style.top = '';
-    };
-  }, [visible]);
+  // // Quản lý scroll khi modal mở/đóng
+  // useEffect(() => {
+  //   if (visible) {
+  //     // Lưu vị trí scroll hiện tại
+  //     const scrollY = window.scrollY;
+      
+  //     // Thêm class và style để "đóng băng" scroll position
+  //     document.body.classList.add('modal-open');
+  //     document.body.style.top = `-${scrollY}px`;
+  //   } else {
+  //     // Lấy vị trí scroll đã lưu
+  //     const scrollY = document.body.style.top;
+      
+  //     // Xóa class và style
+  //     document.body.classList.remove('modal-open');
+  //     document.body.style.top = '';
+      
+  //     // Khôi phục vị trí scroll
+  //     window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
+  //   }
+
+  //   return () => {
+  //     document.body.classList.remove('modal-open');
+  //     document.body.style.top = '';
+  //   };
+  // }, [visible]);
 
   return (
     <Modal
       title={book?.name || 'Chi tiết sách'}
       open={visible}
-      onCancel={onCancel}
+      onCancel={handleClose}
       width={900}
       footer={null}
       centered
@@ -248,6 +270,12 @@ const BookDetailModal = ({ visible, bookId, onCancel, user }) => {
                 <div>{book.bookFormat}</div>
               </Col>
               <Col span={8}>
+                <Text strong>Ngôn ngữ</Text>
+                <div>{book.language}</div>
+              </Col>
+            </Row>
+            <Row gutter={[16, 16]} style={{ marginTop: '8px' }}>
+              <Col span={8}>
                 <Text strong>Ngày xuất bản</Text>
                 <div>{book.publishedDate}</div>
               </Col>
@@ -268,7 +296,6 @@ const BookDetailModal = ({ visible, bookId, onCancel, user }) => {
           <ListReview
             stars={stars}
             listReview={listReview}
-            
           />
         </div>
       )}

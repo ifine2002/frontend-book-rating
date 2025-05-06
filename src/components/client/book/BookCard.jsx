@@ -15,7 +15,7 @@ import BookDetailModal from './BookDetailModal';
 import { useAppSelector } from '../../../redux/hooks';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client/dist/sockjs';
-import { callGetPostById } from '../../../api/services';
+import { callGetPostById, callGetBookDetailById } from '../../../api/services';
 
 const { Meta } = Card;
 const { Text, Title, Paragraph } = Typography;
@@ -28,6 +28,19 @@ const BookCard = ({ book: initialBook }) => {
   const user = useAppSelector(state => state.account.user);
   
   useEffect(() => {
+    if (!initialBook) {
+      console.error('initialBook không tồn tại');
+      return;
+    }
+    console.log('BookCard khởi tạo với:', initialBook);
+  }, [initialBook]);
+
+  useEffect(() => {
+    if (!initialBook || !initialBook.bookId) {
+      console.error('initialBook.bookId không tồn tại');
+      return;
+    }
+
     const socket = new SockJS('http://localhost:8080/ws');
     const client = new Client({
       webSocketFactory: () => socket,
@@ -42,9 +55,9 @@ const BookCard = ({ book: initialBook }) => {
       client.subscribe(`/topic/reviews/${initialBook.bookId}`, async (message) => {
         if (message.body) {
           const notification = JSON.parse(message.body);
-          const { action } = notification;
+          const { action, data } = notification;
           
-          if (action === "create" || action === "delete") {
+          if (action === "create" || action === "update" || action === "delete") {
             await fetchBookDetail();
           }
         }
@@ -63,7 +76,7 @@ const BookCard = ({ book: initialBook }) => {
         client.deactivate();
       }
     };
-  }, [initialBook.bookId]);
+  }, [initialBook?.bookId]);
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -79,18 +92,41 @@ const BookCard = ({ book: initialBook }) => {
     setModalVisible(true);
   };
 
-  const closeBookDetailModal = () => {
+  const closeBookDetailModal = (updatedStars) => {
     setModalVisible(false);
+    if (updatedStars) {
+      setBook(prevBook => ({
+        ...prevBook,
+        stars: updatedStars
+      }));
+    }
   };
 
   const fetchBookDetail = async () => {
     try {
-      const response = await callGetPostById(initialBook.id);
-      if (response.data) {
-        setBook(prevBook => ({
-          ...prevBook,
-          stars: response.data.stars
-        }));
+      // Kiểm tra nếu không có initialBook
+      if (!initialBook) {
+        console.error('initialBook không tồn tại trong fetchBookDetail');
+        return;
+      }
+      
+      // Thêm console log để debug
+      console.log('fetchBookDetail gọi với initialBook:', 
+        { id: initialBook.id, bookId: initialBook.bookId });
+
+      // Luôn sử dụng API detail-book với bookId, bất kể có id hay không
+      if (initialBook.bookId) {
+        const response = await callGetBookDetailById(initialBook.bookId);
+        console.log('Dữ liệu từ API (detail-book):', response.data);
+        
+        if (response.data) {
+          setBook(prevBook => ({
+            ...prevBook,
+            stars: response.data.stars
+          }));
+        }
+      } else {
+        console.error('Không có ID sách (bookId):', initialBook);
       }
     } catch (error) {
       console.error('Error fetching book details:', error);
@@ -212,7 +248,7 @@ const BookCard = ({ book: initialBook }) => {
             {book.stars && (
               <div className="flex items-center mt-2 cursor-pointer" onClick={openBookDetailModal}>
                 <Text className="mr-2">Đánh giá:</Text>
-                <Rate allowHalf disabled defaultValue={book.stars.averageRating || 0} className="text-sm" />
+                <Rate allowHalf disabled value={book.stars.averageRating || 0} className="text-sm" />
                 <Text className="ml-2">
                   ({book.stars?.ratingCount || 0})
                 </Text>
