@@ -27,7 +27,6 @@ const ProfilePage = () => {
     
     // Thêm state cho danh sách bài viết
     const [books, setBooks] = useState([]);
-    const [loadingBooks, setLoadingBooks] = useState(false);
     const [pagination, setPagination] = useState({
         page: 1,
         pageSize: 3,
@@ -138,12 +137,12 @@ const ProfilePage = () => {
         // Ngăn ngừa fetch trùng lặp
         if (isLoading.current) {
             console.log('Fetch already in progress, skipping');
-            return;
+            return Promise.resolve();
         }
 
         console.log(`Starting fetch for page ${pageNumber}...`);
         isLoading.current = true;
-        setLoadingBooks(true);
+        setLoading(true);
         
         try {
             // API sử dụng 0-based index
@@ -159,10 +158,10 @@ const ProfilePage = () => {
                 userId: id
             };
 
+
             // Gọi API
             const query = queryString.stringify(params);
-            const response = await callGetAllPostOfUser(userData.email, `?${query}`);
-            
+            const response = await callGetAllPostOfUser(userData.email, query);
             if (response && response.data) {
                 const { result, totalPages, totalElements } = response.data;
                 
@@ -184,10 +183,12 @@ const ProfilePage = () => {
                     totalPages
                 });
             }
+            return Promise.resolve();
         } catch (error) {
             console.error('Error fetching user posts:', error);
+            return Promise.reject(error);
         } finally {
-            setLoadingBooks(false);
+            setLoading(false);
             isLoading.current = false;
         }
     };
@@ -204,7 +205,17 @@ const ProfilePage = () => {
         console.log(`Load more triggered. Loading page ${nextPage}`);
         
         if (nextPage <= pagination.totalPages) {
-            fetchBooks(nextPage);
+            // Lưu lại vị trí scroll hiện tại
+            const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+            fetchBooks(nextPage).then(() => {
+                // Khôi phục lại vị trí scroll sau khi hoàn thành
+                setTimeout(() => {
+                    window.scrollTo({
+                        top: scrollPosition,
+                        behavior: 'auto'
+                    });
+                }, 100);
+            });
         } else {
             console.log('No more pages to load');
         }
@@ -245,7 +256,6 @@ const ProfilePage = () => {
     };
 
 
-    console.log("check userData:", userData)
     return (
         <div className="max-w-6xl mx-auto p-4">
             {/* Header với thông tin người dùng */}
@@ -372,7 +382,7 @@ const ProfilePage = () => {
                             </Title>
                             <BookList
                                 books={books}
-                                loading={loadingBooks}
+                                loading={loading}
                                 pagination={pagination}
                                 onLoadMore={handleLoadMore}
                             />

@@ -127,7 +127,7 @@ const HomePage = () => {
     // Ngăn ngừa fetch trùng lặp
     if (isLoading.current) {
       console.log('Fetch already in progress, skipping');
-      return;
+      return Promise.resolve();
     }
 
     console.log(`Starting fetch for page ${pageNumber}...`);
@@ -175,8 +175,10 @@ const HomePage = () => {
         console.log(`Updated books: now showing ${pageNumber === 1 ? (result?.length || 0) : books.length + (result?.length || 0)} books`);
         console.log(`Pagination updated: page=${pageNumber}, totalPages=${totalPages}`);
       }
+      return Promise.resolve();
     } catch (error) {
       console.error('Error fetching books:', error);
+      return Promise.reject(error);
     } finally {
       setLoading(false);
       isLoading.current = false;
@@ -195,7 +197,18 @@ const HomePage = () => {
     console.log(`Load more triggered. Loading page ${nextPage}`);
     
     if (nextPage <= pagination.totalPages) {
-      fetchBooks(nextPage);
+      // Lưu lại vị trí scroll hiện tại
+      const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+      
+      fetchBooks(nextPage).then(() => {
+        // Khôi phục lại vị trí scroll sau khi hoàn thành
+        setTimeout(() => {
+          window.scrollTo({
+            top: scrollPosition,
+            behavior: 'auto'
+          });
+        }, 100);
+      });
     } else {
       console.log('No more pages to load');
     }

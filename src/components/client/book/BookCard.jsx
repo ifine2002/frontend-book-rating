@@ -97,7 +97,6 @@ const BookCard = ({ book: initialBook }) => {
     }
   };
 
-  console.log("check ratingCount: ", book.stars.ratingCount)
   
   return (
     <>

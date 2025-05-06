@@ -73,7 +73,10 @@ const BookList = ({ books, loading, pagination, onLoadMore }) => {
               <Spin size="large" tip="Đang tải sách..." />
             ) : hasMoreData ? (
               <Button 
-                onClick={onLoadMore}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onLoadMore();
+                }}
                 type="primary" 
                 ghost 
                 size="large"
