@@ -3,7 +3,7 @@ import { Row, Col, Typography, Rate, Button, Divider, Input} from 'antd';
 import { ShoppingCartOutlined, HeartOutlined, HeartFilled } from '@ant-design/icons';
 import { callGetBookDetailById } from '../../../api/services';
 import { useParams } from 'react-router-dom';
-import './BookDetail.scss';
+import './../../../styles/BookDetail.scss';
 import { useAppSelector } from '../../../redux/hooks';
 import ActionReview from '../review/ActionReview';
 import ListReview from '../review/ListReview';

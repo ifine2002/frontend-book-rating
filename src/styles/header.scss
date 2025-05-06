@@ -4,10 +4,10 @@
     padding: 15px 0;
     position: fixed;
     top: 0;
-    left: 220px;
+    left: 0;
     right: 0;
-    width: calc(100% - 220px);
     z-index: 999;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   
     .container {
       max-width: 1200px;
@@ -20,6 +20,15 @@
           align-items: center;
           justify-content: space-between;
           width: 100%;
+
+          .logo {
+            h1 {
+              margin: 0;
+              font-family: 'Satisfy', cursive;
+              font-size: 24px;
+              font-weight: normal;
+            }
+          }
           
           .search-container {
             flex: 1;

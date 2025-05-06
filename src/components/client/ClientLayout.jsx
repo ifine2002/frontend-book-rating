@@ -8,8 +8,12 @@ const LayoutClient = () => {
     return (
         <Layout style={{ minHeight: '100vh' }}>
             <Layout>
+                <Header />
+            </Layout>
+
+            <Layout>
                 <Sider
-                    width={220}
+                    width={240}
                     theme="light"
                     style={{
                         height: '100vh',
@@ -21,13 +25,40 @@ const LayoutClient = () => {
                 >
                     <Sidebar />
                 </Sider>
-                <Layout style={{ marginLeft: 220 }} className="client-layout">
-                    <Header />
+                
+                <Layout style={{ marginLeft: 240 }} className="client-layout">
                     <Content style={{ padding: '0 24px' }}>
                         <Outlet />
                     </Content>
                 </Layout>
             </Layout>
+            
+            {/* <Layout style={{ marginLeft: 240 }} className="client-layout">
+                    <Content style={{ padding: '0 24px' }}>
+                        <Outlet />
+                    </Content>
+            </Layout> */}
+
+            {/* <Layout>
+                <Sider
+                    width={240}
+                    theme="light"
+                    style={{
+                        height: '100vh',
+                        position: 'fixed',
+                        left: 0,
+                        top: 0,
+                        zIndex: 2,
+                    }}
+                >
+                    
+                </Sider>
+                <Layout style={{ marginLeft: 240 }} className="client-layout">
+                    <Content style={{ padding: '0 24px' }}>
+                        <Outlet />
+                    </Content>
+                </Layout>
+            </Layout> */}
         </Layout>
     )
 }

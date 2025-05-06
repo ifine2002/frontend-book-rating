@@ -23,7 +23,7 @@ const Sidebar = () => {
     if (pathname === '/search') return 'search';
     if (pathname === '/explore') return 'explore';
     if (pathname === '/create') return 'create';
-    if (pathname === '/profile') return 'profile';
+    if (pathname === '/my-profile') return 'my-profile';
     
     return '';
   };
@@ -50,7 +50,7 @@ const Sidebar = () => {
       label: <Link to="/create">Tạo</Link>,
     },
     {
-      key: 'profile',
+      key: 'my-profile',
       icon: <Avatar size={24} icon={<UserOutlined />} />,
       label: <Link to="/my-profile">Trang cá nhân</Link>,
     },
@@ -58,13 +58,13 @@ const Sidebar = () => {
 
   return (
     <Sider
-      width={220}
+      width={240}
       className="sidebar"
       theme="light"
     >
-      <div className="logo">
+      {/* <div className="logo">
         <h1><Link to="/">Goodreads</Link></h1>
-      </div>
+      </div> */}
       <Menu 
         mode="vertical" 
         className="sidebar-menu"

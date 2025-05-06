@@ -239,6 +239,11 @@ export const callGetBookDetailById = (id) => {
   return axios.get(`/book/detail-book/${id}`);
 }
 
+// get post by id
+export const callGetPostById = (id) => {
+  return axios.get(`/book/detail-post/${id}`);
+}
+
 
 // API mới để lấy danh sách sách cần duyệt
 export const callGetApproveBooks = (query) => {

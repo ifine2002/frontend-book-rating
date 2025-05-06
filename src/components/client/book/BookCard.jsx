@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Rate, Tag, Typography, Space, Avatar, Button, Tooltip, Input } from 'antd';
 import { Link } from 'react-router-dom';
 import { 
@@ -11,19 +11,60 @@ import {
   HeartFilled
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { useState } from 'react';
 import BookDetailModal from './BookDetailModal';
 import { useAppSelector } from '../../../redux/hooks';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client/dist/sockjs';
+import { callGetPostById } from '../../../api/services';
 
 const { Meta } = Card;
 const { Text, Title, Paragraph } = Typography;
 
-const BookCard = ({ book }) => {
+const BookCard = ({ book: initialBook }) => {
   const [favorite, setFavorite] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [book, setBook] = useState(initialBook);
   const defaultImage = 'https://placehold.co/300x400?text=No+Image';
   const user = useAppSelector(state => state.account.user);
   
+  useEffect(() => {
+    const socket = new SockJS('http://localhost:8080/ws');
+    const client = new Client({
+      webSocketFactory: () => socket,
+      debug: function (str) {
+      },
+      reconnectDelay: 5000,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000,
+    });
+
+    client.onConnect = () => {
+      client.subscribe(`/topic/reviews/${initialBook.bookId}`, async (message) => {
+        if (message.body) {
+          const notification = JSON.parse(message.body);
+          const { action } = notification;
+          
+          if (action === "create" || action === "delete") {
+            await fetchBookDetail();
+          }
+        }
+      });
+    };
+
+    client.onStompError = (frame) => {
+      console.error('Broker reported error: ' + frame.headers['message']);
+      console.error('Additional details: ' + frame.body);
+    };
+
+    client.activate();
+
+    return () => {
+      if (client && client.connected) {
+        client.deactivate();
+      }
+    };
+  }, [initialBook.bookId]);
+
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -41,6 +82,22 @@ const BookCard = ({ book }) => {
   const closeBookDetailModal = () => {
     setModalVisible(false);
   };
+
+  const fetchBookDetail = async () => {
+    try {
+      const response = await callGetPostById(initialBook.id);
+      if (response.data) {
+        setBook(prevBook => ({
+          ...prevBook,
+          stars: response.data.stars
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching book details:', error);
+    }
+  };
+
+  console.log("check ratingCount: ", book.stars.ratingCount)
   
   return (
     <>
@@ -61,7 +118,9 @@ const BookCard = ({ book }) => {
             size={40}
           />
           <div className="ml-3">
-            <Text strong>{book.user.fullName}</Text>
+            <Link to={`/profile/${book.user.id}`} className="hover:underline">
+              <Text strong>{book.user.fullName}</Text>
+            </Link>
             <div>
               <Text type="secondary" className="text-xs">
                 <CalendarOutlined className="mr-1" />

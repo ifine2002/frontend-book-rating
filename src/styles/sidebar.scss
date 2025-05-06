@@ -1,37 +1,32 @@
+// Định nghĩa các biến
+$header-height: 69px; // Chiều cao của header bao gồm padding
+$sidebar-width: 240px; // Chiều rộng sidebar để khớp với header
+
 .sidebar {
-  height: 100vh;
+  height: calc(100vh - #{$header-height});
   position: fixed;
   left: 0;
-  top: 0;
-  width: 250px;
-  background-color: white;
-  overflow-y: auto;
-  z-index: 1000;
+  top: $header-height;
+  width: $sidebar-width;
   
-  .logo {
-    padding: 20px 15px;
-    margin-bottom: 10px;
-    
-    h1 {
-      margin: 0;
-      font-family: 'Satisfy', cursive;
-      font-size: 24px;
-      font-weight: normal;
-    }
-  }
+  overflow-y: hidden;
+  overflow-x: hidden;
+  z-index: 100;
   
   .sidebar-menu {
     border-right: none;
-    padding-top: 10px;
-    
+    padding-top: 20px;
+    background-color: #ffffff;
+
     .ant-menu-item {
       height: 50px;
       line-height: 50px;
-      margin: 4px 0;
+      margin: 4px 12px;
       padding-left: 12px !important;
       font-size: 16px;
       border-radius: 8px;
-      margin-right: 10px;
+      width: 200px;
+
       
       &-icon {
         font-size: 24px !important;
@@ -39,28 +34,39 @@
       }
       
       &-selected {
-        background-color: transparent !important;
-        font-weight: 600;
+        background-color: #fdfdfd !important;
+        color: #111010;
+        font-weight: 700;
+
+        .anticon {
+          font-size: 28px !important;
+        }
       }
       
       &:hover {
-        background-color: #f8f8f8;
+        background-color: #f5f5f5;
+        width: 200px;
       }
     }
   }
   
-  .more-options {
-    position: absolute;
-    bottom: 20px;
-    width: 100%;
+  // .more-options {
+  //   position: absolute;
+  //   bottom: 20px;
+  //   width: 100%;
+  //   padding: 0 12px;
     
-    .ant-menu-item {
-      border-radius: 8px;
-      margin-right: 10px;
+  //   .ant-menu-item {
+  //     border-radius: 8px;
+  //     margin: 4px 0;
       
-      &:hover {
-        background-color: #f8f8f8;
-      }
-    }
+  //     &:hover {
+  //       background-color: #f5f5f5;
+  //     }
+  //   }
+  // }
+
+  @media (max-width: 768px) {
+    display: none; // Ẩn sidebar trên mobile
   }
 }

@@ -14,13 +14,17 @@ const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 
 const ProfilePage = () => {
+
     const [userData, setUserData] = useState(null);
     const [isFollowing, setIsFollowing] = useState(false);
     const [loading, setLoading] = useState(true);
     const id  = useAppSelector(state => state.account.user.id);
+
     console.log("check id:", id)
+
     useEffect(() => {
         const fetchUserProfile = async () => {
+            if (!id) return;
             try {
                 setLoading(true);
                 const res = await callFetchUserProfile(id);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Input, Tabs, Pagination, Empty, Spin, Rate } from 'antd';
 import { callSearchHomeBook, callSearchUser } from './../../api/services';
-import './../../components/client/book/BookDetail.scss';
+import './../../styles/BookDetail.scss';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 const { TabPane } = Tabs;

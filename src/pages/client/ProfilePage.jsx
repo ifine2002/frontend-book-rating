@@ -297,7 +297,7 @@ const ProfilePage = () => {
                     activeKey={activeModalTab}
                     onChange={(key) => setActiveModalTab(key)}
                 >
-                    <TabPane tab={`Người theo dõi (${userData.follower?.length || 0})`} key="followers">
+                    <TabPane tab={`Follower (${userData.follower?.length || 0})`} key="followers">
                         {userData.follower && userData.follower.length > 0 ? (
                             <List
                                 itemLayout="horizontal"
@@ -324,7 +324,7 @@ const ProfilePage = () => {
                             <Empty description="Không có người theo dõi nào" />
                         )}
                     </TabPane>
-                    <TabPane tab={`Đang theo dõi (${userData.following?.length || 0})`} key="following">
+                    <TabPane tab={`Đã follow(${userData.following?.length || 0})`} key="following">
                         {userData.following && userData.following.length > 0 ? (
                             <List
                                 itemLayout="horizontal"

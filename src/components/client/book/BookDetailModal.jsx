@@ -5,7 +5,7 @@ import ActionReview from '../review/ActionReview';
 import ListReview from '../review/ListReview';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client/dist/sockjs';
-import './BookDetailModal.scss';
+import './../../../styles/BookDetailModal.scss';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -120,6 +120,11 @@ const BookDetailModal = ({ visible, bookId, onCancel, user }) => {
         };
         return updatedReviews;
       } else {
+        // Cập nhật stars object khi tạo mới review
+        setStars(prevStars => ({
+          ...prevStars,
+          ratingCount: prevStars.ratingCount + 1
+        }));
         return [reviewData, ...prevReviews];
       }
     });
@@ -136,12 +141,45 @@ const BookDetailModal = ({ visible, bookId, onCancel, user }) => {
       prevReviews.filter(review => review.userId !== userId)
     );
     
+    // Cập nhật stars object
+    setStars(prevStars => ({
+      ...prevStars,
+      ratingCount: Math.max(0, prevStars.ratingCount - 1)
+    }));
+    
     if (user?.id === userId) {
       setUserReview(null);
       setRating(0);
       setComment('');
     }
   };
+
+  // Quản lý scroll khi modal mở/đóng
+  useEffect(() => {
+    if (visible) {
+      // Lưu vị trí scroll hiện tại
+      const scrollY = window.scrollY;
+      
+      // Thêm class và style để "đóng băng" scroll position
+      document.body.classList.add('modal-open');
+      document.body.style.top = `-${scrollY}px`;
+    } else {
+      // Lấy vị trí scroll đã lưu
+      const scrollY = document.body.style.top;
+      
+      // Xóa class và style
+      document.body.classList.remove('modal-open');
+      document.body.style.top = '';
+      
+      // Khôi phục vị trí scroll
+      window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
+    }
+
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.body.style.top = '';
+    };
+  }, [visible]);
 
   return (
     <Modal
@@ -162,9 +200,12 @@ const BookDetailModal = ({ visible, bookId, onCancel, user }) => {
           display: 'flex',
           flexDirection: 'column',
           maxHeight: 'calc(100vh - 100px)',
+        },
+        mask: {
+          backgroundColor: 'rgba(0, 0, 0, 0.65)'
         }
       }}
-      getContainer={false} 
+      getContainer={false}
     >
       {loading ? (
         <div className="loading-container">Đang tải...</div>
@@ -227,6 +268,7 @@ const BookDetailModal = ({ visible, bookId, onCancel, user }) => {
           <ListReview
             stars={stars}
             listReview={listReview}
+            
           />
         </div>
       )}

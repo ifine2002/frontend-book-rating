@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Typography } from 'antd';
-import { useNavigate, Link } from 'react-router-dom';
+import { Typography, Spin } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import SockJS from 'sockjs-client/dist/sockjs';
 import { Client } from '@stomp/stompjs';
 import queryString from 'query-string';
@@ -204,25 +204,14 @@ const HomePage = () => {
   return (
     <div className="bg-gray-100 min-h-screen py-6">
       <div className="container mx-auto px-4">
-        {/* Debug Info */}
-        {/* <Row justify="center" className="mb-2">
-          <Col xs={24} md={16} lg={14}>
-            <div style={{ textAlign: 'center', fontSize: '12px', color: '#999' }}>
-              Đang hiển thị {books.length} sách | 
-              Trang {pagination.page}/{pagination.totalPages} | 
-              Tổng: {pagination.totalElements} |
-              {loading ? ' Đang tải...' : ' Sẵn sàng'}
-            </div>
-          </Col>
-        </Row> */}
-
-        {/* Book List */}
-        <BookList
-          books={books}
-          loading={loading}
-          pagination={pagination}
-          onLoadMore={handleLoadMore}
-        />
+        <Spin spinning={loading} size='large'>
+          <BookList
+            books={books}
+            loading={loading}
+            pagination={pagination}
+            onLoadMore={handleLoadMore}
+          />
+        </Spin>
       </div>
     </div>
   );

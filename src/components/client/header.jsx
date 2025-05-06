@@ -218,6 +218,9 @@ const Header = () => {
                 <div className="container">
                     {!isMobile ? (
                         <div className="top-menu">
+                            <div className='logo'>
+                                <h1><Link to="/">Goodreads</Link></h1>
+                            </div>
                             <div className="search-container" ref={searchRef}>
                                 <Popover
                                     content={searchResultsContent}

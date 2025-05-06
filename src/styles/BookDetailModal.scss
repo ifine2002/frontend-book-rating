@@ -93,3 +93,10 @@
   .view-all-reviews-button {
     margin-top: 15px;
   }
+
+.modal-open {
+  height: 100vh;
+  overflow-y: scroll;
+  position: fixed;
+  width: 100%;
+}

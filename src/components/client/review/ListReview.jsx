@@ -1,12 +1,14 @@
 import { Row, Col, Rate, Button, Divider, List, Avatar } from 'antd';
 import { StarOutlined } from '@ant-design/icons';
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import './ListReview.scss'
 
 const ListReview = (props) => {
 
     const {stars, listReview} = props;
     const [showAllReviews, setShowAllReviews] = useState(false);
+
     return(
         <div className='list-review'>
           <div className="header-list-review">
@@ -92,7 +94,10 @@ const ListReview = (props) => {
                         />
 
                         <div className="user-details">
-                          <div className="user-name">{review.fullName}</div>
+                          <Link to={`/profile/${review.userId}`} className="hover:underline">
+                            <div className="user-name">{review.fullName}</div>
+
+                          </Link>
                           <div className="review-date">{new Date(review.updatedAt).toLocaleDateString('vi-VN')}</div>
                         </div>
                       </div>
