@@ -17,6 +17,9 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client/dist/sockjs';
 import { callGetPostById, callGetBookDetailById } from '../../../api/services';
 
+// Tạo WebSocket client toàn cục
+const globalStompClients = {};
+
 const { Meta } = Card;
 const { Text, Title, Paragraph } = Typography;
 
@@ -26,14 +29,15 @@ const BookCard = ({ book: initialBook }) => {
   const [book, setBook] = useState(initialBook);
   const defaultImage = 'https://placehold.co/300x400?text=No+Image';
   const user = useAppSelector(state => state.account.user);
+  const componentId = React.useRef(Math.random().toString(36).substring(2, 8)).current;
   
   useEffect(() => {
     if (!initialBook) {
       console.error('initialBook không tồn tại');
       return;
     }
-    console.log('BookCard khởi tạo với:', initialBook);
-  }, [initialBook]);
+    console.log(`[BookCard ${componentId}] Khởi tạo với:`, initialBook);
+  }, [initialBook, componentId]);
 
   useEffect(() => {
     if (!initialBook || !initialBook.bookId) {
@@ -41,42 +45,95 @@ const BookCard = ({ book: initialBook }) => {
       return;
     }
 
-    const socket = new SockJS('http://localhost:8080/ws');
-    const client = new Client({
-      webSocketFactory: () => socket,
-      debug: function (str) {
-      },
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
-    });
+    // Flag để kiểm tra nếu component vẫn mounted
+    let isComponentMounted = true;
+    const bookId = initialBook.bookId.toString();
+    
+    console.log(`[BookCard ${componentId}] Thiết lập WebSocket cho book ${bookId}`);
 
-    client.onConnect = () => {
-      client.subscribe(`/topic/reviews/${initialBook.bookId}`, async (message) => {
-        if (message.body) {
-          const notification = JSON.parse(message.body);
-          const { action, data } = notification;
-          
-          if (action === "create" || action === "update" || action === "delete") {
-            await fetchBookDetail();
-          }
-        }
+    // Tạo hoặc sử dụng lại WebSocket client
+    const setupWebSocket = () => {
+      // Nếu client đã tồn tại, sử dụng lại
+      if (globalStompClients[bookId]) {
+        console.log(`[BookCard ${componentId}] Sử dụng lại WebSocket client cho book ${bookId}`);
+        subscribeToBook(globalStompClients[bookId]);
+        return;
+      }
+
+      console.log(`[BookCard ${componentId}] Tạo WebSocket client mới cho book ${bookId}`);
+      const socket = new SockJS('http://localhost:8080/ws');
+      const client = new Client({
+        webSocketFactory: () => socket,
+        reconnectDelay: 5000,
+        heartbeatIncoming: 4000,
+        heartbeatOutgoing: 4000,
       });
+
+      client.onConnect = () => {
+        console.log(`[BookCard ${componentId}] WebSocket kết nối thành công cho book ${bookId}`);
+        globalStompClients[bookId] = client;
+        subscribeToBook(client);
+      };
+
+      client.onStompError = (frame) => {
+        console.error(`[BookCard ${componentId}] WebSocket error: ${frame.headers['message']}`);
+      };
+
+      client.onWebSocketClose = () => {
+        console.log(`[BookCard ${componentId}] WebSocket đóng kết nối`);
+        if (globalStompClients[bookId] === client) {
+          delete globalStompClients[bookId];
+        }
+      };
+
+      client.activate();
     };
 
-    client.onStompError = (frame) => {
-      console.error('Broker reported error: ' + frame.headers['message']);
-      console.error('Additional details: ' + frame.body);
-    };
-
-    client.activate();
-
-    return () => {
-      if (client && client.connected) {
-        client.deactivate();
+    // Hàm để subscribe vào topic
+    const subscribeToBook = (client) => {
+      if (!isComponentMounted) return;
+      
+      try {
+        console.log(`[BookCard ${componentId}] Đăng ký lắng nghe thông báo cho book ${bookId}`);
+        const subscription = client.subscribe(`/topic/reviews/${bookId}`, async (message) => {
+          if (!isComponentMounted) return;
+          
+          if (message.body) {
+            try {
+              const notification = JSON.parse(message.body);
+              const { action, data } = notification;
+              console.log(`[BookCard ${componentId}] Nhận thông báo WebSocket: ${action}`, data);
+              
+              if (action === "create" || action === "update" || action === "delete") {
+                console.log(`[BookCard ${componentId}] Cập nhật dữ liệu sau thông báo ${action}`);
+                await fetchBookDetail();
+              }
+            } catch (err) {
+              console.error(`[BookCard ${componentId}] Lỗi xử lý thông báo:`, err);
+            }
+          }
+        });
+        
+        // Lưu subscription để có thể unsubscribe khi cần
+        return subscription;
+      } catch (err) {
+        console.error(`[BookCard ${componentId}] Lỗi khi subscribe:`, err);
+        return null;
       }
     };
-  }, [initialBook?.bookId]);
+
+    // Thiết lập WebSocket
+    setupWebSocket();
+
+    // Cập nhật dữ liệu ban đầu để đảm bảo dữ liệu đồng bộ
+    fetchBookDetail();
+
+    // Cleanup
+    return () => {
+      console.log(`[BookCard ${componentId}] Cleanup - Component unmount cho book ${bookId}`);
+      isComponentMounted = false;
+    };
+  }, [initialBook?.bookId, componentId]);
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -99,7 +156,11 @@ const BookCard = ({ book: initialBook }) => {
         ...prevBook,
         stars: updatedStars
       }));
+      // Cập nhật ngay lập tức thay vì chờ WebSocket
+      console.log(`[BookCard ${componentId}] Cập nhật stars từ modal:`, updatedStars);
     }
+    // Luôn gọi fetchBookDetail() để cập nhật mọi thay đổi
+    setTimeout(() => fetchBookDetail(), 500);
   };
 
   const fetchBookDetail = async () => {
@@ -110,26 +171,25 @@ const BookCard = ({ book: initialBook }) => {
         return;
       }
       
-      // Thêm console log để debug
-      console.log('fetchBookDetail gọi với initialBook:', 
-        { id: initialBook.id, bookId: initialBook.bookId });
+      console.log(`[BookCard ${componentId}] Đang lấy dữ liệu chi tiết sách`, initialBook.bookId);
 
       // Luôn sử dụng API detail-book với bookId, bất kể có id hay không
       if (initialBook.bookId) {
         const response = await callGetBookDetailById(initialBook.bookId);
-        console.log('Dữ liệu từ API (detail-book):', response.data);
+        console.log(`[BookCard ${componentId}] Nhận dữ liệu từ API:`, response.data);
         
         if (response.data) {
           setBook(prevBook => ({
             ...prevBook,
             stars: response.data.stars
           }));
+          console.log(`[BookCard ${componentId}] Cập nhật stars:`, response.data.stars);
         }
       } else {
-        console.error('Không có ID sách (bookId):', initialBook);
+        console.error(`[BookCard ${componentId}] Không có ID sách (bookId):`, initialBook);
       }
     } catch (error) {
-      console.error('Error fetching book details:', error);
+      console.error(`[BookCard ${componentId}] Lỗi lấy dữ liệu:`, error);
     }
   };
 
