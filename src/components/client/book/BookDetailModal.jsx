@@ -9,6 +9,19 @@ import './../../../styles/BookDetailModal.scss';
 
 const { Title, Text, Paragraph } = Typography;
 
+// Hàm tính chiều rộng của scrollbar
+const getScrollbarWidth = () => {
+  const outer = document.createElement('div');
+  outer.style.visibility = 'hidden';
+  outer.style.overflow = 'scroll';
+  document.body.appendChild(outer);
+  const inner = document.createElement('div');
+  outer.appendChild(inner);
+  const scrollbarWidth = outer.offsetWidth - inner.offsetWidth;
+  outer.parentNode.removeChild(outer);
+  return scrollbarWidth;
+};
+
 const BookDetailModal = ({ visible, bookId, onCancel, user }) => {
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -164,6 +177,41 @@ const BookDetailModal = ({ visible, bookId, onCancel, user }) => {
     }
   };
 
+  useEffect(() => {
+    if (visible) {
+        // Lấy giá trị ban đầu
+        const originalBodyPaddingRight = window.getComputedStyle(document.body).paddingRight;
+        const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
+        const scrollbarWidth = getScrollbarWidth();
+        const bodyPaddingRightValue = parseInt(originalBodyPaddingRight, 10) || 0;
+
+        // Thêm padding cho body
+        document.body.style.overflow = 'hidden';
+        document.body.style.paddingRight = `${bodyPaddingRightValue + scrollbarWidth}px`;
+
+        // Thêm padding cho header
+        const header = document.querySelector('.header-section');
+        let originalHeaderPaddingRight = '0px';
+        
+        if (header) {
+            originalHeaderPaddingRight = window.getComputedStyle(header).paddingRight;
+            const currentHeaderPadding = parseInt(originalHeaderPaddingRight, 10) || 0;
+            header.style.paddingRight = `${currentHeaderPadding + scrollbarWidth}px`;
+        }
+
+        // Hàm cleanup
+        return () => {
+            document.body.style.overflow = originalBodyOverflow;
+            document.body.style.paddingRight = originalBodyPaddingRight;
+
+            if (header) {
+                header.style.paddingRight = originalHeaderPaddingRight;
+            }
+        };
+    }
+}, [visible]);
+
+
   // Xử lý khi đóng modal
   const handleClose = () => {
     // Nếu dữ liệu đã được cập nhật, gọi onCancel để cập nhật phía BookCard
@@ -175,33 +223,6 @@ const BookDetailModal = ({ visible, bookId, onCancel, user }) => {
     // Reset lại trạng thái đã cập nhật
     setIsDataUpdated(false);
   };
-
-  // // Quản lý scroll khi modal mở/đóng
-  // useEffect(() => {
-  //   if (visible) {
-  //     // Lưu vị trí scroll hiện tại
-  //     const scrollY = window.scrollY;
-      
-  //     // Thêm class và style để "đóng băng" scroll position
-  //     document.body.classList.add('modal-open');
-  //     document.body.style.top = `-${scrollY}px`;
-  //   } else {
-  //     // Lấy vị trí scroll đã lưu
-  //     const scrollY = document.body.style.top;
-      
-  //     // Xóa class và style
-  //     document.body.classList.remove('modal-open');
-  //     document.body.style.top = '';
-      
-  //     // Khôi phục vị trí scroll
-  //     window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
-  //   }
-
-  //   return () => {
-  //     document.body.classList.remove('modal-open');
-  //     document.body.style.top = '';
-  //   };
-  // }, [visible]);
 
   return (
     <Modal

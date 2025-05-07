@@ -1,5 +1,6 @@
 /* Header Styles */
 .header-section {
+    box-sizing: border-box; // Thêm dòng này
     background-color: #fff;
     padding: 15px 0;
     position: fixed;
