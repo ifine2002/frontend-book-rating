@@ -17,8 +17,81 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client/dist/sockjs';
 import { callGetPostById, callGetBookDetailById } from '../../../api/services';
 
-// Tạo WebSocket client toàn cục
-const globalStompClients = {};
+// Tạo một WebSocket client toàn cục duy nhất
+let globalStompClient = null;
+let activeSubscriptions = {};
+let connectionCount = 0;
+
+// Hàm khởi tạo kết nối WebSocket toàn cục
+const initializeGlobalWebSocket = () => {
+  if (globalStompClient) {
+    return globalStompClient;
+  }
+  
+  console.log('Khởi tạo kết nối WebSocket toàn cục');
+  const socket = new SockJS('http://localhost:8080/ws');
+  const client = new Client({
+    webSocketFactory: () => socket,
+    reconnectDelay: 5000,
+    heartbeatIncoming: 4000,
+    heartbeatOutgoing: 4000,
+  });
+
+  client.onConnect = () => {
+    console.log('WebSocket kết nối toàn cục thành công');
+  };
+
+  client.onStompError = (frame) => {
+    console.error(`WebSocket error toàn cục: ${frame.headers['message']}`);
+  };
+
+  client.onWebSocketClose = () => {
+    console.log('WebSocket đóng kết nối toàn cục');
+    if (connectionCount === 0) {
+      globalStompClient = null;
+    }
+  };
+
+  client.activate();
+  globalStompClient = client;
+  return client;
+};
+
+// Hàm đăng ký theo dõi một chủ đề
+const subscribeToTopic = (topic, callback) => {
+  if (!globalStompClient || !globalStompClient.connected) {
+    console.error('Không thể đăng ký: WebSocket chưa kết nối');
+    return null;
+  }
+  
+  if (!activeSubscriptions[topic]) {
+    console.log(`Đăng ký lắng nghe chủ đề: ${topic}`);
+    const subscription = globalStompClient.subscribe(topic, callback);
+    activeSubscriptions[topic] = {
+      subscription,
+      count: 1
+    };
+    return subscription;
+  } else {
+    console.log(`Tăng số lượng đăng ký cho chủ đề: ${topic}`);
+    activeSubscriptions[topic].count += 1;
+    return activeSubscriptions[topic].subscription;
+  }
+};
+
+// Hàm hủy đăng ký theo dõi một chủ đề
+const unsubscribeFromTopic = (topic) => {
+  if (activeSubscriptions[topic]) {
+    activeSubscriptions[topic].count -= 1;
+    console.log(`Giảm số lượng đăng ký cho chủ đề: ${topic}, còn lại: ${activeSubscriptions[topic].count}`);
+    
+    if (activeSubscriptions[topic].count === 0) {
+      console.log(`Hủy đăng ký chủ đề: ${topic}`);
+      activeSubscriptions[topic].subscription.unsubscribe();
+      delete activeSubscriptions[topic];
+    }
+  }
+};
 
 const { Meta } = Card;
 const { Text, Title, Paragraph } = Typography;
@@ -30,6 +103,7 @@ const BookCard = ({ book: initialBook }) => {
   const defaultImage = 'https://placehold.co/300x400?text=No+Image';
   const user = useAppSelector(state => state.account.user);
   const componentId = React.useRef(Math.random().toString(36).substring(2, 8)).current;
+  const [subscription, setSubscription] = useState(null);
   
   useEffect(() => {
     if (!initialBook) {
@@ -48,82 +122,51 @@ const BookCard = ({ book: initialBook }) => {
     // Flag để kiểm tra nếu component vẫn mounted
     let isComponentMounted = true;
     const bookId = initialBook.bookId.toString();
+    const topic = `/topic/reviews/${bookId}`;
     
-    console.log(`[BookCard ${componentId}] Thiết lập WebSocket cho book ${bookId}`);
+    console.log(`[BookCard ${componentId}] Thiết lập theo dõi cho book ${bookId}`);
 
-    // Tạo hoặc sử dụng lại WebSocket client
-    const setupWebSocket = () => {
-      // Nếu client đã tồn tại, sử dụng lại
-      if (globalStompClients[bookId]) {
-        console.log(`[BookCard ${componentId}] Sử dụng lại WebSocket client cho book ${bookId}`);
-        subscribeToBook(globalStompClients[bookId]);
-        return;
-      }
-
-      console.log(`[BookCard ${componentId}] Tạo WebSocket client mới cho book ${bookId}`);
-      const socket = new SockJS('http://localhost:8080/ws');
-      const client = new Client({
-        webSocketFactory: () => socket,
-        reconnectDelay: 5000,
-        heartbeatIncoming: 4000,
-        heartbeatOutgoing: 4000,
-      });
-
-      client.onConnect = () => {
-        console.log(`[BookCard ${componentId}] WebSocket kết nối thành công cho book ${bookId}`);
-        globalStompClients[bookId] = client;
-        subscribeToBook(client);
-      };
-
-      client.onStompError = (frame) => {
-        console.error(`[BookCard ${componentId}] WebSocket error: ${frame.headers['message']}`);
-      };
-
-      client.onWebSocketClose = () => {
-        console.log(`[BookCard ${componentId}] WebSocket đóng kết nối`);
-        if (globalStompClients[bookId] === client) {
-          delete globalStompClients[bookId];
-        }
-      };
-
-      client.activate();
-    };
-
-    // Hàm để subscribe vào topic
-    const subscribeToBook = (client) => {
+    // Tăng số lượng kết nối
+    connectionCount++;
+    
+    // Đảm bảo kết nối WebSocket toàn cục đã được khởi tạo
+    const client = initializeGlobalWebSocket();
+    
+    // Hàm xử lý tin nhắn
+    const handleMessage = async (message) => {
       if (!isComponentMounted) return;
       
-      try {
-        console.log(`[BookCard ${componentId}] Đăng ký lắng nghe thông báo cho book ${bookId}`);
-        const subscription = client.subscribe(`/topic/reviews/${bookId}`, async (message) => {
-          if (!isComponentMounted) return;
+      if (message.body) {
+        try {
+          const notification = JSON.parse(message.body);
+          const { action, data } = notification;
+          console.log(`[BookCard ${componentId}] Nhận thông báo WebSocket: ${action}`, data);
           
-          if (message.body) {
-            try {
-              const notification = JSON.parse(message.body);
-              const { action, data } = notification;
-              console.log(`[BookCard ${componentId}] Nhận thông báo WebSocket: ${action}`, data);
-              
-              if (action === "create" || action === "update" || action === "delete") {
-                console.log(`[BookCard ${componentId}] Cập nhật dữ liệu sau thông báo ${action}`);
-                await fetchBookDetail();
-              }
-            } catch (err) {
-              console.error(`[BookCard ${componentId}] Lỗi xử lý thông báo:`, err);
-            }
+          if (action === "create" || action === "update" || action === "delete") {
+            console.log(`[BookCard ${componentId}] Cập nhật dữ liệu sau thông báo ${action}`);
+            await fetchBookDetail();
           }
-        });
-        
-        // Lưu subscription để có thể unsubscribe khi cần
-        return subscription;
-      } catch (err) {
-        console.error(`[BookCard ${componentId}] Lỗi khi subscribe:`, err);
-        return null;
+        } catch (err) {
+          console.error(`[BookCard ${componentId}] Lỗi xử lý thông báo:`, err);
+        }
       }
     };
 
-    // Thiết lập WebSocket
-    setupWebSocket();
+    // Đăng ký theo dõi chủ đề khi client đã kết nối
+    const setupSubscription = () => {
+      if (client.connected) {
+        const sub = subscribeToTopic(topic, handleMessage);
+        setSubscription(sub);
+      } else {
+        client.onConnect = () => {
+          console.log(`[BookCard ${componentId}] WebSocket kết nối thành công, đăng ký chủ đề`);
+          const sub = subscribeToTopic(topic, handleMessage);
+          setSubscription(sub);
+        };
+      }
+    };
+
+    setupSubscription();
 
     // Cập nhật dữ liệu ban đầu để đảm bảo dữ liệu đồng bộ
     fetchBookDetail();
@@ -132,6 +175,18 @@ const BookCard = ({ book: initialBook }) => {
     return () => {
       console.log(`[BookCard ${componentId}] Cleanup - Component unmount cho book ${bookId}`);
       isComponentMounted = false;
+      
+      // Hủy đăng ký chủ đề
+      unsubscribeFromTopic(topic);
+      
+      // Giảm số lượng kết nối
+      connectionCount--;
+      
+      // Nếu không còn kết nối nào, đóng WebSocket
+      if (connectionCount === 0 && globalStompClient) {
+        console.log('Đóng kết nối WebSocket toàn cục vì không còn component nào sử dụng');
+        globalStompClient.deactivate();
+      }
     };
   }, [initialBook?.bookId, componentId]);
 
