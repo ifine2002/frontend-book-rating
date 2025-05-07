@@ -1,8 +1,9 @@
 import React, { useRef, useEffect } from 'react';
-import { Row, Col, Spin, Empty, Button } from 'antd';
+import { Row, Col, Spin, Empty, Button, InputNumber, Select } from 'antd';
 import BookCard from './BookCard';
+import SimpleBookCard from './SimpleBookCard';
 
-const BookList = ({ books, loading, pagination, onLoadMore }) => {
+const BookList = ({ books, loading, pagination, onLoadMore, simple, onPageChange }) => {
   const loadMoreRef = useRef(null);
   const observerRef = useRef(null);
 
@@ -55,6 +56,91 @@ const BookList = ({ books, loading, pagination, onLoadMore }) => {
   // Xác định nếu còn dữ liệu để tải
   const hasMoreData = pagination && pagination.page <= pagination.totalPages;
 
+  if (simple) {
+    // Phân trang dạng custom
+    const { page, pageSize, totalElements } = pagination || {};
+    const totalPages = pagination?.totalPages || 1;
+    const from = totalElements === 0 ? 0 : (pageSize * (page - 1)) + 1;
+    const to = Math.min(page * pageSize, totalElements);
+    const pageOptions = [4, 8, 12, 16, 20];
+
+    const handlePageChange = (value) => {
+      if (onPageChange) {
+        onPageChange(value, pageSize);
+      }
+    };
+
+    const handlePageSizeChange = (value) => {
+      if (onPageChange) {
+        onPageChange(1, value); // reset về trang 1 khi đổi pageSize
+      }
+    };
+
+    return (
+      <div>
+        <div className="w-full overflow-x-auto">
+          <div className="flex gap-6 min-w-max">
+            {books.map((book, index) => (
+              <div key={`${book.bookId}-${index}`} className="w-[200px] flex-shrink-0">
+                <SimpleBookCard book={book} />
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Phân trang custom */}
+        <div className="flex items-center justify-between mt-6 px-4 mb-6">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-600">Hiển thị:</span>
+            <Select
+              value={pageSize}
+              onChange={handlePageSizeChange}
+              size="small"
+              style={{ width: 90 }}
+            >
+              {pageOptions.map(opt => (
+                <Select.Option key={opt} value={opt}>{opt} sách</Select.Option>
+              ))}
+            </Select>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-gray-600">
+              {from}-{to} trên {totalElements} sách
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => handlePageChange(page - 1)}
+                disabled={page === 1}
+                size="small"
+              >
+                Trước
+              </Button>
+              <InputNumber
+                min={1}
+                max={totalPages}
+                value={page}
+                onChange={handlePageChange}
+                style={{ width: 60 }}
+                size="small"
+              />
+              <Button
+                onClick={() => handlePageChange(page + 1)}
+                disabled={page === totalPages}
+                size="small"
+              >
+                Sau
+              </Button>
+            </div>
+          </div>
+        </div>
+        {loading && (
+          <div className="w-full flex justify-center py-6 mt-4">
+            <Spin size="large" tip="Đang tải sách..." />
+          </div>
+        )}
+      </div>
+    );
+  }
+  // layout mặc định (dọc)
   return (
     <div>
       <Row justify="center">
@@ -62,9 +148,8 @@ const BookList = ({ books, loading, pagination, onLoadMore }) => {
           {books.map((book, index) => (
             <BookCard key={`${book.bookId}-${index}`} book={book} />
           ))}
-
           {/* Load more trigger element */}
-          <div 
+          <div
             ref={loadMoreRef}
             className="w-full flex justify-center py-6 mt-4"
             style={{ minHeight: '100px' }}
@@ -72,13 +157,13 @@ const BookList = ({ books, loading, pagination, onLoadMore }) => {
             {loading ? (
               <Spin size="large" tip="Đang tải sách..." />
             ) : hasMoreData ? (
-              <Button 
+              <Button
                 onClick={(e) => {
                   e.preventDefault();
                   onLoadMore();
                 }}
-                type="primary" 
-                ghost 
+                type="primary"
+                ghost
                 size="large"
                 className="load-more-button"
               >

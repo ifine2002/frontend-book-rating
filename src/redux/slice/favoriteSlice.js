@@ -1,11 +1,11 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { callGetAllFavoriteBookOfUser, callLikeBook, callDeleteFavoriteBook } from './../../api/services';
+import { callGetAllFavoriteOfUser, callLikeBook, callDeleteFavoriteBook } from './../../api/services';
 
 // First, create the thunk
 export const fetchFavorite = createAsyncThunk(
     'favorite/fetchFavorite',
     async ({ query }) => {
-        const response = await callGetAllFavoriteBookOfUser(query);
+        const response = await callGetAllFavoriteOfUser(query);
         return response;
     }
 );

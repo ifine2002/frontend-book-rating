@@ -316,9 +316,14 @@ export const callDeleteFavoriteBook = (bookId) => {
   return axios.delete(`/favorite-book/?bookId=${bookId}`);
 }
 
-//API fetch all favorite book of user
-export const callGetAllFavoriteBookOfUser = (query) => {
+//API fetch all favorite of user
+export const callGetAllFavoriteOfUser = (query) => {
   return axios.get(`/favorite-book/list-of-user?${query}`);
+}
+
+//API fetch all book favorite of user
+export const callFetchAllBookFavoriteOfUser = (query) => {
+  return axios.get(`/favorite-book/books-of-user?${query}`);
 }
 
 /**

@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { callFetchUserProfile, callGetAllPostOfUser } from "../../api/services";
+import { useState, useEffect, useRef } from "react";
+import { callFetchUserProfile, callGetAllPostOfUser, callFetchAllBookFavoriteOfUser } from "../../api/services";
 import { useParams, Link } from "react-router-dom";
 import { Card, Avatar, Tabs, Button, Typography, List, Divider, Empty, Spin, Modal } from "antd";
 import { 
@@ -51,6 +51,17 @@ const ProfilePage = () => {
     
     // WebSocket client
     const [stompClient, setStompClient] = useState(null);
+
+    // Thêm state cho danh sách sách yêu thích
+    const [favoriteBooks, setFavoriteBooks] = useState([]);
+    const [favoritePagination, setFavoritePagination] = useState({
+        page: 1,
+        pageSize: 10,
+        totalElements: 0,
+        totalPages: 0
+    });
+    const isFavoriteLoading = useRef(false);
+    const [loadingFavorite, setLoadingFavorite] = useState(false);
 
     useEffect(() => {
         const fetchUserProfile = async () => {
@@ -265,6 +276,76 @@ const ProfilePage = () => {
         };
     }, []);
 
+    // Fetch favorite books lần đầu khi component mount
+    useEffect(() => {
+        if (id && userData?.email) {
+            resetAndFetchFavoriteBooks();
+        }
+    }, [id, userData]);
+
+    // Reset dữ liệu và fetch lại từ đầu cho sách yêu thích
+    const resetAndFetchFavoriteBooks = () => {
+        setFavoriteBooks([]);
+        setFavoritePagination(prev => ({
+            ...prev,
+            page: 1,
+            totalElements: 0,
+            totalPages: 0
+        }));
+        fetchFavoriteBooks(1, 5); // Mặc định hiển thị 5 sách
+    };
+
+    // Hàm lấy dữ liệu sách yêu thích từ API
+    const fetchFavoriteBooks = async (pageNumber, pageSize = 5) => {
+        if (isFavoriteLoading.current) {
+            return Promise.resolve();
+        }
+        isFavoriteLoading.current = true;
+        setLoadingFavorite(true);
+        try {
+            const pageForApi = pageNumber - 1;
+            const params = {
+                page: pageForApi,
+                size: pageSize,
+                userId: id
+            };
+            const query = queryString.stringify(params);
+            const response = await callFetchAllBookFavoriteOfUser(query);
+            if (response && response.data) {
+                const { result, totalPages, totalElements } = response.data;
+                setFavoriteBooks(result || []);
+                setFavoritePagination({
+                    page: pageNumber,
+                    pageSize: pageSize,
+                    totalElements,
+                    totalPages
+                });
+            }
+            return Promise.resolve();
+        } catch (error) {
+            console.error('Error fetching favorite books:', error);
+            return Promise.reject(error);
+        } finally {
+            setLoadingFavorite(false);
+            isFavoriteLoading.current = false;
+        }
+    };
+
+    // Xử lý khi người dùng thay đổi trang hoặc số lượng sách hiển thị
+    const handleFavoritePageChange = (page, pageSize) => {
+        console.log('Changing page:', page, 'pageSize:', pageSize);
+        fetchFavoriteBooks(page, pageSize);
+    };
+
+    // Xử lý khi người dùng cuộn xuống để tải thêm sách yêu thích
+    const handleLoadMoreFavorite = () => {
+        if (isFavoriteLoading.current) return;
+        const nextPage = favoritePagination.page + 1;
+        if (nextPage <= favoritePagination.totalPages) {
+            fetchFavoriteBooks(nextPage, favoritePagination.pageSize);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -445,10 +526,14 @@ const ProfilePage = () => {
                     >
                         <div className="grid grid-cols-1 gap-6">
                             <div>
-                                <Title level={5} className="mb-4">Sách đã thêm</Title>
-                                <Empty 
-                                    description="Chưa có sách nào được thêm" 
-                                    className="py-20 bg-white rounded-lg shadow-sm"
+                                <Title level={5} className="mb-4">Sách yêu thích</Title>
+                                <BookList
+                                    books={favoriteBooks}
+                                    loading={loadingFavorite}
+                                    pagination={favoritePagination}
+                                    onLoadMore={handleLoadMoreFavorite}
+                                    onPageChange={handleFavoritePageChange}
+                                    simple={true}
                                 />
                             </div>
                         </div>
