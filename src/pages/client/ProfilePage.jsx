@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { callFetchUserProfile, callGetAllPostOfUser } from "../../api/services";
 import { useParams, Link } from "react-router-dom";
 import { Card, Avatar, Tabs, Button, Typography, List, Divider, Empty, Spin, Modal } from "antd";
@@ -12,9 +12,23 @@ import queryString from 'query-string';
 import SockJS from 'sockjs-client/dist/sockjs';
 import { Client } from '@stomp/stompjs';
 import BookList from '../../components/client/book/BookList';
+import './../../styles/ProfilePage.scss';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
+
+// Hàm throttle để cải thiện hiệu suất khi cuộn
+const throttle = (func, delay) => {
+  let lastCall = 0;
+  return (...args) => {
+    const now = new Date().getTime();
+    if (now - lastCall < delay) {
+      return;
+    }
+    lastCall = now;
+    return func(...args);
+  };
+};
 
 const ProfilePage = () => {
     const [userData, setUserData] = useState(null);
@@ -24,6 +38,7 @@ const ProfilePage = () => {
     const [activeModalTab, setActiveModalTab] = useState("followers");
     const { id } = useParams();
     const isLoading = useRef(false);
+    const headerRef = useRef(null);
     
     // Thêm state cho danh sách bài viết
     const [books, setBooks] = useState([]);
@@ -221,6 +236,35 @@ const ProfilePage = () => {
         }
     };
 
+    // Thêm effect để xử lý sự kiện scroll
+    useEffect(() => {
+        // Xử lý sự kiện scroll với throttle để tăng hiệu suất
+        const handleScroll = throttle(() => {
+            if (headerRef.current) {
+                // Kiểm tra vị trí cuộn
+                const scrollPosition = window.scrollY || document.documentElement.scrollTop;
+                if (scrollPosition > 10) {
+                    headerRef.current.classList.add('sticky');
+                } else {
+                    headerRef.current.classList.remove('sticky');
+                }
+            }
+        }, 100); // Throttle với 100ms
+
+        // Kích hoạt ngay lập tức để đặt trạng thái ban đầu
+        handleScroll();
+        
+        // Thêm sự kiện listener
+        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('resize', handleScroll);
+        
+        // Cleanup
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('resize', handleScroll);
+        };
+    }, []);
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -259,40 +303,45 @@ const ProfilePage = () => {
     return (
         <div className="max-w-6xl mx-auto p-4">
             {/* Header với thông tin người dùng */}
-            <Card className="mb-6 shadow-md">
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                    <div className="md:col-span-2 flex justify-center">
-                        <Avatar 
-                            src={userData.image} 
-                            icon={!userData.image && <UserOutlined />} 
-                            size={100}
-                            className="border border-gray-200"
-                        />
-                    </div>
-                    <div className="md:col-span-7 flex flex-col justify-center">
-                        <Title level={4} className="mb-1">
-                            {userData.fullName}
-                        </Title>
-                        <div className="flex gap-4 text-gray-600">
-                            <Text className="cursor-pointer hover:text-blue-500" onClick={showFollowersModal}>
-                                <span className="font-bold">{userData.follower?.length || 0}</span> người theo dõi
-                            </Text>
-                            <Text className="cursor-pointer hover:text-blue-500" onClick={showFollowingModal}>
-                                <span className="font-bold">{userData.following?.length || 0}</span> đang theo dõi
-                            </Text>
+            <div style={{ height: 'auto', minHeight: '160px' }}>
+                <Card 
+                    className="mb-6 shadow-md profile-user-header"
+                    ref={headerRef}
+                >
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                        <div className="md:col-span-2 flex justify-center items-center">
+                            <Avatar 
+                                src={userData.image} 
+                                icon={!userData.image && <UserOutlined />} 
+                                size={100}
+                                className="border border-gray-200"
+                            />
+                        </div>
+                        <div className="md:col-span-7 flex flex-col justify-center min-h-[120px]">
+                            <Title level={4} className="mb-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                                {userData.fullName}
+                            </Title>
+                            <div className="flex gap-4 text-gray-600">
+                                <Text className="cursor-pointer hover:text-blue-500" onClick={showFollowersModal}>
+                                    <span className="font-bold">{userData.follower?.length || 0}</span> Follower
+                                </Text>
+                                <Text className="cursor-pointer hover:text-blue-500" onClick={showFollowingModal}>
+                                    <span className="font-bold">{userData.following?.length || 0}</span> Đã follow
+                                </Text>
+                            </div>
+                        </div>
+                        <div className="md:col-span-3 flex items-center justify-center md:justify-end">
+                            <Button 
+                                onClick={toggleFollow}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-md text-white text-base transition 
+                                            ${isFollowing === false ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-500 hover:bg-gray-600'}`}
+                            >
+                                {isFollowing === false ? 'Follow' : 'Đã Follow'}
+                            </Button>
                         </div>
                     </div>
-                    <div className="md:col-span-3 flex items-center justify-center md:justify-end">
-                        <Button 
-                            onClick={toggleFollow}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-white text-base transition 
-                                        ${isFollowing === false ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-500 hover:bg-gray-600'}`}
-                        >
-                            {isFollowing === false ? 'Follow' : 'Đã Follow'}
-                        </Button>
-                    </div>
-                </div>
-            </Card>
+                </Card>
+            </div>
 
             {/* Modal kết hợp người theo dõi và đang theo dõi */}
             <Modal
@@ -307,7 +356,7 @@ const ProfilePage = () => {
                     activeKey={activeModalTab}
                     onChange={(key) => setActiveModalTab(key)}
                 >
-                    <TabPane tab={`Follower (${userData.follower?.length || 0})`} key="followers">
+                    <TabPane tab={`Follower ${userData.follower?.length || 0}`} key="followers">
                         {userData.follower && userData.follower.length > 0 ? (
                             <List
                                 itemLayout="horizontal"
@@ -334,7 +383,7 @@ const ProfilePage = () => {
                             <Empty description="Không có người theo dõi nào" />
                         )}
                     </TabPane>
-                    <TabPane tab={`Đã follow(${userData.following?.length || 0})`} key="following">
+                    <TabPane tab={`Đã follow ${userData.following?.length || 0}`} key="following">
                         {userData.following && userData.following.length > 0 ? (
                             <List
                                 itemLayout="horizontal"
@@ -370,35 +419,42 @@ const ProfilePage = () => {
             </Modal>
 
             {/* Tabs */}
-            <Tabs defaultActiveKey="post" className="profile-tabs">
-                <TabPane 
-                    tab={<span><AuditOutlined />Bài Viết</span>} 
-                    key="post"
-                >
-                    <div className="grid grid-cols-1 gap-6">
-                        <div>
-                            <Title level={5} className="mb-4">
-                                Bài viết của {userData.fullName}
-                            </Title>
-                            <BookList
-                                books={books}
-                                loading={loading}
-                                pagination={pagination}
-                                onLoadMore={handleLoadMore}
-                            />
+            <div className="profile-content">
+                <Tabs defaultActiveKey="post" className="profile-tabs mt-6">
+                    <TabPane 
+                        tab={<span><AuditOutlined />Bài Viết</span>} 
+                        key="post"
+                    >
+                        <div className="grid grid-cols-1 gap-6">
+                            <div>
+                                <Title level={5} className="mb-4">
+                                    Bài viết của {userData.fullName}
+                                </Title>
+                                <BookList
+                                    books={books}
+                                    loading={loading}
+                                    pagination={pagination}
+                                    onLoadMore={handleLoadMore}
+                                />
+                            </div>
                         </div>
-                    </div>
-                </TabPane>
-                <TabPane 
-                    tab={<span><BookOutlined />Yêu Thích</span>} 
-                    key="books"
-                >
-                    <div className="p-4">
-                        <Title level={5} className="mb-4">Sách đã thêm</Title>
-                        <Empty description="Chưa có sách nào được thêm" />
-                    </div>
-                </TabPane>
-            </Tabs>
+                    </TabPane>
+                    <TabPane 
+                        tab={<span><BookOutlined />Yêu Thích</span>} 
+                        key="books"
+                    >
+                        <div className="grid grid-cols-1 gap-6">
+                            <div>
+                                <Title level={5} className="mb-4">Sách đã thêm</Title>
+                                <Empty 
+                                    description="Chưa có sách nào được thêm" 
+                                    className="py-20 bg-white rounded-lg shadow-sm"
+                                />
+                            </div>
+                        </div>
+                    </TabPane>
+                </Tabs>
+            </div>
         </div>
     );
 };

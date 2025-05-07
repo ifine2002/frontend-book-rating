@@ -305,6 +305,22 @@ export const callUploadBook = (data) => {
 export const callGetAllPostOfUser = (email, query) => {
   return axios.get(`/book/list-book-user?email=${encodeURIComponent(email)}${query ? `&${query}` : ''}`);
 }
+
+//API like book
+export const callLikeBook = (bookId) => {
+  return axios.post(`/favorite-book/?bookId=${bookId}`);
+}
+
+//API delete favorite book
+export const callDeleteFavoriteBook = (bookId) => {
+  return axios.delete(`/favorite-book/?bookId=${bookId}`);
+}
+
+//API fetch all favorite book of user
+export const callGetAllFavoriteBookOfUser = (query) => {
+  return axios.get(`/favorite-book/list-of-user?${query}`);
+}
+
 /**
  *
 Module Role

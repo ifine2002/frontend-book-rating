@@ -8,6 +8,7 @@ import bookReducer from './slice/bookSlice';
 import followReducer from './slice/followSlice';
 import ratingReducer from './slice/ratingSlice';
 import commentReducer from './slice/commentSlice';
+import favoriteReducer from './slice/favoriteSlice';
 
 // Tạo store
 export const store = configureStore({
@@ -21,6 +22,7 @@ export const store = configureStore({
         category: categoryReducer,
         rating: ratingReducer,
         comment: commentReducer,
+        favorite: favoriteReducer,
     },
 });
 

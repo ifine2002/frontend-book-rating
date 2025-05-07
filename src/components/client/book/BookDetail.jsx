@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Row, Col, Typography, Rate, Button, Divider, Input} from 'antd';
+import { Row, Col, Typography, Rate, Button, Divider, Input, message} from 'antd';
 import { ShoppingCartOutlined, HeartOutlined, HeartFilled } from '@ant-design/icons';
 import { callGetBookDetailById } from '../../../api/services';
 import { useParams } from 'react-router-dom';
 import './../../../styles/BookDetail.scss';
-import { useAppSelector } from '../../../redux/hooks';
+import { useAppSelector, useAppDispatch } from '../../../redux/hooks';
 import ActionReview from '../review/ActionReview';
 import ListReview from '../review/ListReview';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client/dist/sockjs';
+import { likeBook, unlikeBook, fetchFavorite } from '../../../redux/slice/favoriteSlice';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -16,16 +17,19 @@ const { TextArea } = Input;
 const BookDetail = () => {
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [favorite, setFavorite] = useState(false);
   const { id } = useParams();
 
   const user = useAppSelector(state => state.account.user);
+  const dispatch = useAppDispatch();
 
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [listReview, setListReview] = useState([]);
   const [userReview, setUserReview] = useState(null);
   const [stars, setStart] = useState(null);
+
+  const favoriteBooks = useAppSelector(state => state.favorite.favoriteBooks);
+  const isFavorite = favoriteBooks.includes(book?.id);
   
   const fetchBookDetail = useCallback(async (showLoading = true) => {
     try {
@@ -33,8 +37,8 @@ const BookDetail = () => {
       const response = await callGetBookDetailById(id);
       setBook(response.data);
       setListReview(response.data.reviews);
-      if (showLoading) setLoading(false);
       setStart(response.data.stars);
+      if (showLoading) setLoading(false);
     } catch (error) {
       console.error('Error fetching book details:', error);
       if (showLoading) setLoading(false);
@@ -46,6 +50,12 @@ const BookDetail = () => {
       fetchBookDetail();
     }
   }, [id, fetchBookDetail]);
+
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchFavorite({ query: '' }));
+    }
+  }, [user, dispatch]);
 
   useEffect(() => {
     if (user?.id && listReview?.length > 0) {
@@ -60,7 +70,7 @@ const BookDetail = () => {
         setComment('');
       }
     }
-  }, [user, listReview]);
+  }, [user?.id, listReview]);
 
   useEffect(() => {
     const socket = new SockJS('http://localhost:8080/ws');
@@ -162,10 +172,30 @@ const BookDetail = () => {
     return <div>Không tìm thấy sách</div>;
   }
 
-  const toggleFavorite = () => {
-    setFavorite(!favorite);
-  };
+  const toggleFavorite = async () => {
+    try {
+      if (!user) {
+        message.warning('Vui lòng đăng nhập để yêu thích sách');
+        return;
+      }
 
+      if (isFavorite) {
+        // Nếu đã yêu thích thì gọi API hủy yêu thích
+        await dispatch(unlikeBook(book.id));
+        message.success('Đã bỏ yêu thích sách');
+      } else {
+        // Nếu chưa yêu thích thì gọi API yêu thích
+        await dispatch(likeBook(book.id));
+        message.success('Đã thêm vào danh sách yêu thích');
+      }
+      
+      // Sau khi thao tác thành công, cập nhật lại danh sách sách yêu thích
+      dispatch(fetchFavorite({ query: '' }));
+    } catch (error) {
+      console.error('Lỗi khi thao tác với sách yêu thích:', error);
+      message.error('Có lỗi xảy ra khi thao tác với sách yêu thích');
+    }
+  };
 
   return (
     <div className="book-detail-container">
@@ -184,9 +214,9 @@ const BookDetail = () => {
           </Button>
           <Button 
             size="large" 
-            icon={favorite ? <HeartFilled /> : <HeartOutlined />} 
+            icon={isFavorite ? <HeartFilled /> : <HeartOutlined />} 
             onClick={toggleFavorite}
-            className={favorite ? 'favorite-button active' : 'favorite-button'}
+            className={isFavorite ? 'favorite-button active' : 'favorite-button'}
           >
             Yêu thích
           </Button>

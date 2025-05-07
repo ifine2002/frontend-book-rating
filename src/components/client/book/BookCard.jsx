@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Rate, Tag, Typography, Space, Avatar, Button, Tooltip, Input } from 'antd';
+import { Card, Rate, Tag, Typography, Space, Avatar, Button, Tooltip, message } from 'antd';
 import { Link } from 'react-router-dom';
 import { 
   BookOutlined, 
@@ -12,10 +12,11 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import BookDetailModal from './BookDetailModal';
-import { useAppSelector } from '../../../redux/hooks';
+import { useAppSelector, useAppDispatch } from '../../../redux/hooks';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client/dist/sockjs';
-import { callGetPostById, callGetBookDetailById } from '../../../api/services';
+import { callGetBookDetailById } from '../../../api/services';
+import { likeBook, unlikeBook, fetchFavorite } from '../../../redux/slice/favoriteSlice';
 
 // Tạo một WebSocket client toàn cục duy nhất
 let globalStompClient = null;
@@ -97,11 +98,13 @@ const { Meta } = Card;
 const { Text, Title, Paragraph } = Typography;
 
 const BookCard = ({ book: initialBook }) => {
-  const [favorite, setFavorite] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [book, setBook] = useState(initialBook);
   const defaultImage = 'https://placehold.co/300x400?text=No+Image';
   const user = useAppSelector(state => state.account.user);
+  const dispatch = useAppDispatch();
+  const favoriteBooks = useAppSelector(state => state.favorite.favoriteBooks);
+  const isFavorite = favoriteBooks.includes(book.bookId);
   const componentId = React.useRef(Math.random().toString(36).substring(2, 8)).current;
   const [subscription, setSubscription] = useState(null);
   
@@ -188,7 +191,13 @@ const BookCard = ({ book: initialBook }) => {
         globalStompClient.deactivate();
       }
     };
-  }, [initialBook?.bookId, componentId]);
+  }, [initialBook?.bookId, componentId, dispatch]);
+
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchFavorite({ query: '' }));
+    }
+  }, [user, dispatch]);
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -196,8 +205,29 @@ const BookCard = ({ book: initialBook }) => {
     return dayjs(date).format('DD/MM/YYYY HH:mm');
   };
 
-  const toggleFavorite = () => {
-    setFavorite(!favorite);
+  const toggleFavorite = async () => {
+    try {
+      if (!user) {
+        message.warning('Vui lòng đăng nhập để yêu thích sách');
+        return;
+      }
+
+      if (isFavorite) {
+        // Nếu đã yêu thích thì gọi API hủy yêu thích
+        await dispatch(unlikeBook(book.bookId));
+        message.success('Đã bỏ yêu thích sách');
+      } else {
+        // Nếu chưa yêu thích thì gọi API yêu thích
+        await dispatch(likeBook(book.bookId));
+        message.success('Đã thêm vào danh sách yêu thích');
+      }
+      
+      // Sau khi thao tác thành công, cập nhật lại danh sách sách yêu thích
+      dispatch(fetchFavorite({ query: '' }));
+    } catch (error) {
+      console.error('Lỗi khi thao tác với sách yêu thích:', error);
+      message.error('Có lỗi xảy ra khi thao tác với sách yêu thích');
+    }
   };
   
   const openBookDetailModal = () => {
@@ -248,6 +278,7 @@ const BookCard = ({ book: initialBook }) => {
     }
   };
 
+  
   
   return (
     <>
@@ -317,9 +348,9 @@ const BookCard = ({ book: initialBook }) => {
               </Button>
               <Button 
                 size="middle" 
-                icon={favorite ? <HeartFilled /> : <HeartOutlined />} 
+                icon={isFavorite ? <HeartFilled /> : <HeartOutlined />} 
                 onClick={toggleFavorite}
-                className={favorite ? 'favorite-button active' : 'favorite-button'}
+                className={isFavorite ? 'favorite-button active' : 'favorite-button'}
               >
                 Yêu thích
               </Button>
