@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   createBrowserRouter,
   RouterProvider
@@ -24,23 +24,19 @@ import LayoutClient from './components/client/ClientLayout';
 import BookDetailPage from './pages/client/BookDetailPage';
 import HomePage from './pages/client/HomePage';
 import UploadBookPage from './pages/client/UploadBook';
-// import './styles/global.css'
 import SearchPage from './pages/client/SearchPage';
 import ProfilePage from './pages/client/ProfilePage';
 import MyProfile from './pages/client/MyProfile';
+import Home from './pages/client/Home';
+import ProtectedRoute from './components/share/ProtectedRoute';
+import WelcomeLayout from './components/client/WelcomeLayout';
 
 export default function App() {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (
-      window.location.pathname === '/login'
-      || window.location.pathname === '/register'
-    )
-      return;
-    dispatch(fetchAccount())
-  }, [])
-
+    dispatch(fetchAccount());
+  }, [dispatch]);
 
   const router = createBrowserRouter([
     {
@@ -50,7 +46,11 @@ export default function App() {
       children: [
         {
           index: true,
-          element: <HomePage />
+          element: (
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+          )
         },
         {
           path: "book/:id",
@@ -74,7 +74,16 @@ export default function App() {
         }
       ],
     },
-
+    {
+      path: "/welcome",
+      element: <WelcomeLayout />,
+      children: [
+        {
+          index: true,
+          element: <Home />
+        }
+      ]
+    },
     {
       path: "/admin",
       element: <LayoutAdmin />,

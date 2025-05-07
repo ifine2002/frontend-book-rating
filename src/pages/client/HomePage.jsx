@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import SockJS from 'sockjs-client/dist/sockjs';
 import { Client } from '@stomp/stompjs';
 import queryString from 'query-string';
+import { useAppSelector } from '../../redux/hooks';
 
 import { callGetHomeBooks } from '../../api/services';
 import BookList from '../../components/client/book/BookList';
@@ -13,6 +14,7 @@ const { Title } = Typography;
 const HomePage = () => {
   const navigate = useNavigate();
   const isLoading = useRef(false);
+  const isAuthenticated = useAppSelector((state) => state.account.isAuthenticated);
 
   // State
   const [books, setBooks] = useState([]);
@@ -213,6 +215,11 @@ const HomePage = () => {
       console.log('No more pages to load');
     }
   };
+
+  // Nếu chưa đăng nhập, component sẽ không render vì đã bị ProtectedRoute chặn
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="bg-gray-100 min-h-screen py-6">
