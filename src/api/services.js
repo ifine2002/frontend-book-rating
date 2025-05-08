@@ -469,6 +469,10 @@ export const callFetchFollow = (query) => {
   return axios.get(`/follow/list?${query}`);
 }
 
+//API get list user account following
+export const callFetchFollowing = (query) => {
+  return axios.get(`/follow/list-following?${query}`);
+}
 
 /**
  *

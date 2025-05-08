@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { callFetchFollow } from './../../api/services';
+import { callFetchFollow, callFetchFollowing } from './../../api/services';
 
 // First, create the thunk
 export const fetchFollow = createAsyncThunk(
@@ -10,6 +10,14 @@ export const fetchFollow = createAsyncThunk(
     }
 )
 
+//API get list user account following
+export const fetchFollowing = createAsyncThunk(
+    'follow/fetchFollowing',
+    async ({ query }) => {
+        const response = await callFetchFollowing(query);
+        return response;
+    }
+)
 
 const initialState = {
     isFetching: true,
@@ -60,9 +68,28 @@ export const followSlide = createSlice({
                 };
                 state.result = action.payload.data.result;
             }
-            // Add user to the state array
+        })
 
-            // state.courseOrder = action.payload;
+        // Thêm reducers cho fetchFollowing
+        builder.addCase(fetchFollowing.pending, (state, action) => {
+            state.isFetching = true;
+        })
+
+        builder.addCase(fetchFollowing.rejected, (state, action) => {
+            state.isFetching = false;
+        })
+
+        builder.addCase(fetchFollowing.fulfilled, (state, action) => {
+            if (action.payload && action.payload.data) {
+                state.isFetching = false;
+                state.data = {
+                    page: action.payload.data.page,
+                    pageSize: action.payload.data.pageSize,
+                    pages: action.payload.data.totalPages,
+                    total: action.payload.data.totalElements
+                };
+                state.result = action.payload.data.result;
+            }
         })
     },
 
