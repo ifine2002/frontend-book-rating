@@ -322,8 +322,8 @@ export const callGetAllFavoriteOfUser = (query) => {
 }
 
 //API fetch all book favorite of user
-export const callFetchAllBookFavoriteOfUser = (query) => {
-  return axios.get(`/favorite-book/books-of-user?${query}`);
+export const callFetchAllBookFavoriteOfUser = (userId, query) => {
+  return axios.get(`/favorite-book/books-of-user/${userId}?${query}`);
 }
 
 /**
@@ -455,8 +455,14 @@ export const callCreateFollow = (follow) => {
   return axios.post(`/follow/?followerId=${follow.followerId}&followingId=${follow.followingId}`);
 }
 
+//delete follow
 export const callDeleteFollow = (id) => {
   return axios.delete(`/follow/${id}`);
+}
+
+//unfollow
+export const calUnfollow = (follow) => {
+  return axios.delete(`/follow/?followerId=${follow.followerId}&followingId=${follow.followingId}`);
 }
 
 export const callFetchFollow = (query) => {

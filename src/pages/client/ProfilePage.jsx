@@ -1,17 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { callFetchUserProfile, callGetAllPostOfUser, callFetchAllBookFavoriteOfUser } from "../../api/services";
+import { callFetchUserProfile, callGetAllPostOfUser, callFetchAllBookFavoriteOfUser, calUnfollow, callCreateFollow } from "../../api/services";
 import { useParams, Link } from "react-router-dom";
 import { Card, Avatar, Tabs, Button, Typography, List, Divider, Empty, Spin, Modal } from "antd";
 import { 
   UserOutlined, 
   BookOutlined, 
   AuditOutlined,
-  UserDeleteOutlined
 } from '@ant-design/icons';
 import queryString from 'query-string';
 import SockJS from 'sockjs-client/dist/sockjs';
 import { Client } from '@stomp/stompjs';
-import BookList from '../../components/client/book/BookList';
+import BookList from '../../components/client/book/BookList'
+import { useAppSelector } from './../../redux/hooks';
 import './../../styles/ProfilePage.scss';
 
 const { Title, Text } = Typography;
@@ -30,13 +30,29 @@ const throttle = (func, delay) => {
   };
 };
 
+// Hàm tính chiều rộng của scrollbar
+const getScrollbarWidth = () => {
+    const outer = document.createElement('div');
+    outer.style.visibility = 'hidden';
+    outer.style.overflow = 'scroll';
+    document.body.appendChild(outer);
+    const inner = document.createElement('div');
+    outer.appendChild(inner);
+    const scrollbarWidth = outer.offsetWidth - inner.offsetWidth;
+    outer.parentNode.removeChild(outer);
+    return scrollbarWidth;
+  };
+
 const ProfilePage = () => {
     const [userData, setUserData] = useState(null);
     const [isFollowing, setIsFollowing] = useState(false);
     const [loading, setLoading] = useState(true);
     const [followerVisible, setFollowerVisible] = useState(false);
     const [activeModalTab, setActiveModalTab] = useState("followers");
+    const [followingStates, setFollowingStates] = useState({});
+    const [followerStates, setFollowerStates] = useState({});
     const { id } = useParams();
+    const user = useAppSelector(state => state.account.user);
     const isLoading = useRef(false);
     const headerRef = useRef(null);
     
@@ -68,8 +84,17 @@ const ProfilePage = () => {
             try {
                 setLoading(true);
                 const res = await callFetchUserProfile(id);
+                console.log("check res", res);
                 if (res && res.data) {
                     setUserData(res.data);
+                    // Kiểm tra trạng thái follow
+                    if (res.data.follower) {
+                        console.log("check res.data.following", res.data.following);
+                        console.log("check user.id", user.id);
+                        // Kiểm tra xem user hiện tại có nằm trong danh sách following của user đang xem không
+                        const isFollowerUser = res.data.follower.some(follower => follower.id === user.id);
+                        setIsFollowing(isFollowerUser);
+                    }
                 }
             } catch (error) {
                 console.error("Lỗi khi lấy thông tin người dùng:", error);
@@ -78,8 +103,10 @@ const ProfilePage = () => {
             }
         };
 
-        fetchUserProfile();
-    }, [id]);
+        if (user?.id) { // Chỉ fetch khi có user.id
+            fetchUserProfile();
+        }
+    }, [id, user?.id]); // Thêm user?.id vào dependencies
     
     // Khởi tạo WebSocket
     useEffect(() => {
@@ -219,6 +246,40 @@ const ProfilePage = () => {
         }
     };
 
+    useEffect(() => {
+        if (followerVisible) {
+            // Lấy giá trị ban đầu
+            const originalBodyPaddingRight = window.getComputedStyle(document.body).paddingRight;
+            const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
+            const scrollbarWidth = getScrollbarWidth();
+            const bodyPaddingRightValue = parseInt(originalBodyPaddingRight, 10) || 0;
+    
+            // Thêm padding cho body
+            document.body.style.overflow = 'hidden';
+            document.body.style.paddingRight = `${bodyPaddingRightValue + scrollbarWidth}px`;
+    
+            // Thêm padding cho header
+            const header = document.querySelector('.header-section');
+            let originalHeaderPaddingRight = '0px';
+            
+            if (header) {
+                originalHeaderPaddingRight = window.getComputedStyle(header).paddingRight;
+                const currentHeaderPadding = parseInt(originalHeaderPaddingRight, 10) || 0;
+                header.style.paddingRight = `${currentHeaderPadding + scrollbarWidth}px`;
+            }
+    
+            // Hàm cleanup
+            return () => {
+                document.body.style.overflow = originalBodyOverflow;
+                document.body.style.paddingRight = originalBodyPaddingRight;
+    
+                if (header) {
+                    header.style.paddingRight = originalHeaderPaddingRight;
+                }
+            };
+        }
+    }, [followerVisible]);
+
     // Xử lý khi người dùng cuộn xuống để tải thêm sách
     const handleLoadMore = () => {
         if (isLoading.current) {
@@ -310,7 +371,7 @@ const ProfilePage = () => {
                 userId: id
             };
             const query = queryString.stringify(params);
-            const response = await callFetchAllBookFavoriteOfUser(query);
+            const response = await callFetchAllBookFavoriteOfUser(userData.id, query);
             if (response && response.data) {
                 const { result, totalPages, totalElements } = response.data;
                 setFavoriteBooks(result || []);
@@ -346,6 +407,98 @@ const ProfilePage = () => {
         }
     };
 
+    // Thêm hàm xử lý follow/unfollow
+    const handleFollowToggle = async (userId) => {
+        try {
+            if (followingStates[userId]) {
+                const follow = {
+                    followerId: userData.id,
+                    followingId: userId
+                };
+                // Nếu đang follow thì unfollow
+                const res = await calUnfollow(follow);
+                console.log("check res", res);
+                setFollowingStates(prev => ({
+                    ...prev,
+                    [userId]: false
+                }));
+            } else {
+                // Nếu chưa follow thì follow
+                const follow = {
+                    followerId: userData.id,
+                    followingId: userId
+                };
+                const res = await callCreateFollow(follow);
+                console.log("check res", res);
+                setFollowingStates(prev => ({
+                    ...prev,
+                    [userId]: true
+                }));
+            }
+            
+        } catch (error) {
+            console.error("Lỗi khi thực hiện follow/unfollow:", error);
+        }
+    };
+
+    // Thêm useEffect để khởi tạo trạng thái follow ban đầu
+    useEffect(() => {
+        if (userData?.following) {
+            const initialStates = {};
+            userData.following.forEach(user => {
+                initialStates[user.id] = true;
+            });
+            setFollowingStates(initialStates);
+        }
+    }, [userData]);
+
+    // Thêm useEffect để khởi tạo trạng thái follow cho followers
+    useEffect(() => {
+        if (userData?.follower) {
+            const initialStates = {};
+            userData.follower.forEach(user => {
+                // Kiểm tra xem user có tồn tại trong following không
+                const isFollowing = userData.following?.some(followingUser => followingUser.id === user.id);
+                initialStates[user.id] = isFollowing || false;
+            });
+            setFollowerStates(initialStates);
+        }
+    }, [userData]);
+
+    // Thêm hàm xử lý follow/unfollow cho followers
+    const handleFollowerFollowToggle = async (userId) => {
+        try {
+            if (followerStates[userId]) {
+                // Nếu đang follow thì unfollow
+                const follow = {
+                    followerId: userData.id,
+                    followingId: userId
+                };
+                const res = await calUnfollow(follow);
+                console.log("check res", res);
+                setFollowerStates(prev => ({
+                    ...prev,
+                    [userId]: false
+                }));
+            } else {
+                // Nếu chưa follow thì follow
+                const follow = {
+                    followerId: userData.id,
+                    followingId: userId
+                };
+                const res = await callCreateFollow(follow);
+                console.log("check res", res);
+                setFollowerStates(prev => ({
+                    ...prev,
+                    [userId]: true
+                }));
+            }
+        } catch (error) {
+            console.error("Lỗi khi thực hiện follow/unfollow:", error);
+        }
+    };
+
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -362,8 +515,30 @@ const ProfilePage = () => {
         );
     }
 
-    const toggleFollow = () => {
-        setIsFollowing(!isFollowing);
+    const toggleFollow = async () => {
+        try {
+            if (isFollowing) {
+                // Nếu đang follow thì unfollow
+                const follow = {
+                    followerId: user.id,
+                    followingId: id
+                };
+                const res = await calUnfollow(follow);
+                console.log("check res", res);
+                setIsFollowing(false);
+            } else {
+                // Nếu chưa follow thì follow
+                const follow = {
+                    followerId: user.id,
+                    followingId: id
+                };
+                const res = await callCreateFollow(follow);
+                console.log("check res", res);
+                setIsFollowing(true);
+            }
+        } catch (error) {
+            console.error("Lỗi khi thực hiện follow/unfollow:", error);
+        }
     };
 
     const showFollowersModal = () => {
@@ -380,9 +555,8 @@ const ProfilePage = () => {
         setFollowerVisible(false);
     };
 
-
     return (
-        <div className="max-w-6xl mx-auto p-4">
+        <div className="max-w-6xl p-4">
             {/* Header với thông tin người dùng */}
             <div style={{ height: 'auto', minHeight: '160px' }}>
                 <Card 
@@ -431,6 +605,7 @@ const ProfilePage = () => {
                 onCancel={handleModalClose}
                 footer={null}
                 width={600}
+                getContainer={false}
             >
                 <Tabs 
                     defaultActiveKey={activeModalTab}
@@ -446,8 +621,14 @@ const ProfilePage = () => {
                                     <>
                                         <List.Item
                                             actions={[
-                                                <Button key="follow-back" size="small">
-                                                    Theo dõi lại
+                                                <Button 
+                                                    key="follow-back" 
+                                                    size="small"
+                                                    onClick={() => handleFollowerFollowToggle(user.id)}
+                                                    className={`${followerStates[user.id] ? 'bg-gray-500 hover:!bg-gray-600' : 'bg-blue-500 hover:!bg-blue-600'} w-20 !text-white hover:!text-white`}
+                                                    style={{ border: 'none' }}
+                                                >
+                                                    {followerStates[user.id] ? 'Đã follow' : 'Follow lại'}
                                                 </Button>
                                             ]}
                                         >
@@ -475,11 +656,12 @@ const ProfilePage = () => {
                                             actions={[
                                                 <Button 
                                                     key="unfollow" 
-                                                    danger 
                                                     size="small"
-                                                    icon={<UserDeleteOutlined />}
+                                                    onClick={() => handleFollowToggle(user.id)}
+                                                    className={`${followingStates[user.id] ? 'bg-gray-500 hover:!bg-gray-600' : 'bg-blue-500 hover:!bg-blue-600'} w-20 !text-white hover:!text-white`}
+                                                    style={{ border: 'none' }}
                                                 >
-                                                    Bỏ theo dõi
+                                                    {followingStates[user.id] ? 'Đã follow' : 'Follow'}
                                                 </Button>
                                             ]}
                                         >
