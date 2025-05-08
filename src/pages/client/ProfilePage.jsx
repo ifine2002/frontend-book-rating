@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { callFetchUserProfile, callGetAllPostOfUser, callFetchAllBookFavoriteOfUser, calUnfollow, callCreateFollow } from "../../api/services";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Card, Avatar, Tabs, Button, Typography, List, Divider, Empty, Spin, Modal } from "antd";
 import { 
   UserOutlined, 
@@ -53,6 +53,7 @@ const ProfilePage = () => {
     const [followerStates, setFollowerStates] = useState({});
     const { id } = useParams();
     const user = useAppSelector(state => state.account.user);
+    const navigate = useNavigate();
     const isLoading = useRef(false);
     const headerRef = useRef(null);
     
@@ -78,6 +79,13 @@ const ProfilePage = () => {
     });
     const isFavoriteLoading = useRef(false);
     const [loadingFavorite, setLoadingFavorite] = useState(false);
+
+    useEffect(() => {
+        if (user && user.id && id && id.toString() === user.id.toString()) {
+            console.log("Redirecting to my-profile");
+            navigate('/my-profile', { replace: true });
+        }
+    }, [id, user, navigate]);
 
     useEffect(() => {
         const fetchUserProfile = async () => {
