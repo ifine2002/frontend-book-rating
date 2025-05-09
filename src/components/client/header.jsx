@@ -141,8 +141,8 @@ const Header = () => {
     // Dropdown menu items
     const dropdownItems = [
         {
-            label: <label>Trang cá nhân</label>,
-            key: 'manage-account',
+            label: <Link to="/my-profile">Trang Cá Nhân</Link>,
+            key: 'my-profile',
             icon: <ContactsOutlined />
         },
         {

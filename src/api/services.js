@@ -168,6 +168,15 @@ export const callFetchUserProfile = (id) => {
   return axios.get(`/user/profile/${id}`);
 }
 
+//API change password
+export const callChangePassword = (data) => {
+  return axios.patch(`/user/change-password`, {
+    oldPassword: data.oldPassword,
+    newPassword: data.newPassword,
+    confirmPassword: data.confirmPassword
+  });
+}
+
 /**
  *
  *Module Book

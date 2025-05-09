@@ -1,11 +1,13 @@
 import { ModalForm, ProFormText, ProFormSelect, ProFormDatePicker } from '@ant-design/pro-components';
-import { Upload, Avatar, Button, Form, message } from 'antd';
+import { Upload, Avatar, Button, Form, message, Tabs } from 'antd';
 import { UserOutlined, PlusOutlined } from '@ant-design/icons';
 import { useState, useEffect, useRef } from 'react';
-import { callFetchUserDetail, callUpdateUserProfile } from "./../../../api/services";
+import { callFetchUserDetail, callUpdateUserProfile, callChangePassword } from "./../../../api/services";
 import dayjs from 'dayjs';
 import '../../../styles/ChangeInfoModal.scss';
 import { isMobile } from 'react-device-detect';
+
+const { TabPane } = Tabs;
 
 const ChangeInfoModal = ({ editProfileVisible, setEditProfileVisible, id }) => {
   const [form] = Form.useForm();
@@ -13,6 +15,7 @@ const ChangeInfoModal = ({ editProfileVisible, setEditProfileVisible, id }) => {
   const [isDeleteImage, setIsDeleteImage] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
   const uploadRef = useRef();
+  const [activeModalTab, setActiveModalTab] = useState("change-info");
 
   useEffect(() => {
     if (editProfileVisible && id) {
@@ -89,38 +92,58 @@ const ChangeInfoModal = ({ editProfileVisible, setEditProfileVisible, id }) => {
 }
 
   const handleFinish = async (values) => {
-    let image = undefined;
-    if (fileList.length > 0 && fileList[0].originFileObj) {
-      image = fileList[0].originFileObj;
-    }
-    const payload = {
-      ...values,
-      image,
-      deleteImage: isDeleteImage ? true : undefined,
-    };
-    console.log(payload);
-    const res = await callUpdateUserProfile(payload);
-    if (res && res.data) {
-      message.success('Cập nhật thành công!');
-    } else {
-      message.error('Cập nhật thất bại!');
+    if (activeModalTab === "change-info") {
+      let image = undefined;
+      if (fileList.length > 0 && fileList[0].originFileObj) {
+        image = fileList[0].originFileObj;
+      }
+      const payload = {
+        ...values,
+        image,
+        deleteImage: isDeleteImage ? true : undefined,
+      };
+      const res = await callUpdateUserProfile(payload);
+      if (res && res.data) {
+        message.success('Cập nhật thành công!');
+      } else {
+        message.error('Cập nhật thất bại!');
+      }
+    } else if (activeModalTab === "change-password") {
+      const passwordData = {
+        oldPassword: values.oldPassword,
+        newPassword: values.newPassword,
+        confirmPassword: values.confirmPassword
+      };
+      const res = await callChangePassword(passwordData);
+      
+      form.setFieldsValue({
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      if (res && res.status === 200) {
+        message.success('Cập nhật thành công!');
+      } else {
+        message.error('Cập nhật thất bại!');
+      }
     }
   };
 
   return (
     <ModalForm
-      title={<span className="text-2xl font-bold flex justify-center items-center mb-6">Chỉnh sửa trang cá nhân</span>}
+      title={<span className="text-2xl font-bold flex justify-center items-center mb-2">Quản lý tài khoản</span>}
       open={editProfileVisible}
+      style={{minHeight: '500px'}}
       modalProps={{
         destroyOnClose: true,
         onCancel: () => {handleReset()},
-        style: { top: 70 },
+        style: { top: 30 },
         afterClose: () => handleReset(),
         destroyOnClose: true,
-        width: isMobile ? "100%" : 800,
+        width: isMobile ? "100%" : '800px',
         keyboard: false,
         maskClosable: true,
-        okText: "Lưu",
+        okText: activeModalTab === "change-password" ? "Đổi mật khẩu" : "Lưu",
         cancelText: "Hủy",
         getContainer: false
       }}
@@ -129,88 +152,131 @@ const ChangeInfoModal = ({ editProfileVisible, setEditProfileVisible, id }) => {
       form={form}
       onFinish={handleFinish}
     >
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Cột trái: Ảnh đại diện */}
-        <div className="flex flex-col items-center md:w-1/3">
-          <span className="font-bold mb-4 mt-2">Ảnh đại diện</span>
-          <Avatar
-            size={100}
-            icon={<UserOutlined />}
-            src={
-              fileList.length > 0 && fileList[0].originFileObj
-                ? URL.createObjectURL(fileList[0].originFileObj)
-                : avatarUrl
-            }
-          />
-          <Upload
-            ref={uploadRef}
-            style={{ display: 'none' }}
-            beforeUpload={beforeUpload}
-            onChange={handleChangeUpload}
-            onRemove={handleRemove}
-            maxCount={1}
-            showUploadList={false}
-            customRequest={({ file, onSuccess }) => {
-              setTimeout(() => {
-                onSuccess("ok");
-              }, 0);
-            }}
-          />
-          {fileList.length < 1 && (
-            <Button
-              type="link"
-              icon={<PlusOutlined />}
-              size="small"
-              className="mt-2"
-              onClick={() => {
-                document.querySelector('input[type=file]').click();
+      <Tabs
+        defaultActiveKey={activeModalTab}
+        activeKey={activeModalTab}
+        onChange={(key) => setActiveModalTab(key)}
+      >
+        <TabPane tab="Thông tin cá nhân" key="change-info">
+          <div className="flex flex-col md:flex-row gap-8">
+            {/* Cột trái: Ảnh đại diện */}
+            <div className="flex flex-col items-center md:w-1/3">
+              <span className="font-bold mb-4 mt-2">Ảnh đại diện</span>
+              <Avatar
+                size={100}
+                icon={<UserOutlined />}
+                src={
+                  fileList.length > 0 && fileList[0].originFileObj
+                    ? URL.createObjectURL(fileList[0].originFileObj)
+                    : avatarUrl
+                }
+              />
+              <Upload
+                ref={uploadRef}
+                style={{ display: 'none' }}
+                beforeUpload={beforeUpload}
+                onChange={handleChangeUpload}
+                onRemove={handleRemove}
+                maxCount={1}
+                showUploadList={false}
+                customRequest={({ file, onSuccess }) => {
+                  setTimeout(() => {
+                    onSuccess("ok");
+                  }, 0);
+                }}
+              />
+              {fileList.length < 1 && (
+                <Button
+                  type="link"
+                  icon={<PlusOutlined />}
+                  size="small"
+                  className="mt-2"
+                  onClick={() => {
+                    document.querySelector('input[type=file]').click();
+                  }}
+                >
+                  Thêm
+                </Button>
+              )}
+              {fileList.length === 1 && (
+                <Button danger type="link" onClick={handleRemove}>Xóa ảnh</Button>
+              )}
+            </div>
+            {/* Cột phải: Thông tin cá nhân */}
+            <div className="flex-1 grid grid-cols-1">
+              <ProFormText
+                name="fullName"
+                label="Họ và tên"
+                placeholder="Nhập họ tên"
+                rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
+              />
+              <ProFormSelect
+                name="gender"
+                label="Giới tính"
+                options={[
+                  { label: 'Nam', value: 'MALE' },
+                  { label: 'Nữ', value: 'FEMALE' },
+                  { label: 'Khác', value: 'OTHER' },
+                ]}
+                placeholder="Chọn giới tính"
+                rules={[{ required: true, message: 'Vui lòng chọn giới tính' }]}
+              />
+              <ProFormDatePicker
+                name="userDOB"
+                label="Ngày sinh"
+                placeholder="Chọn ngày sinh"
+                rules={[{ required: true, message: 'Vui lòng chọn ngày sinh' }]}
+              />
+              <ProFormText
+                label="Phone"
+                name="phone"
+                rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
+                placeholder="Nhập phone"
+              />
+              <ProFormText
+                name="address"
+                label="Địa chỉ"
+                placeholder="Nhập địa chỉ"
+              />
+            </div>
+          </div>
+        </TabPane>
+        <TabPane tab="Thay đổi mật khẩu" key="change-password">
+          <div className='flex flex-col gap-4 justify-center items-center mt-4'>
+            <ProFormText.Password
+              name="oldPassword"
+              label="Mật khẩu cũ"
+              fieldProps={{
+                style: { height: '40px' }
               }}
-            >
-              Thêm
-            </Button>
-          )}
-          {fileList.length === 1 && (
-            <Button danger type="link" onClick={handleRemove}>Xóa ảnh</Button>
-          )}
-        </div>
-        {/* Cột phải: Thông tin cá nhân */}
-        <div className="flex-1 grid grid-cols-1">
-          <ProFormText
-            name="fullName"
-            label="Họ và tên"
-            placeholder="Nhập họ tên"
-            rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
-          />
-          <ProFormSelect
-            name="gender"
-            label="Giới tính"
-            options={[
-              { label: 'Nam', value: 'MALE' },
-              { label: 'Nữ', value: 'FEMALE' },
-              { label: 'Khác', value: 'OTHER' },
-            ]}
-            placeholder="Chọn giới tính"
-            rules={[{ required: true, message: 'Vui lòng chọn giới tính' }]}
-          />
-          <ProFormDatePicker
-            name="userDOB"
-            label="Ngày sinh"
-            placeholder="Chọn ngày sinh"
-            rules={[{ required: true, message: 'Vui lòng chọn ngày sinh' }]}
-          />
-          <ProFormText
-            label="Phone"
-            name="phone"
-            rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
-            placeholder="Nhập phone"
-          />
-          <ProFormText
-            name="address"
-            label="Địa chỉ"
-            placeholder="Nhập địa chỉ"
-          />
-        </div>
-      </div>
+              rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
+              placeholder="Nhập mật khẩu cũ"
+              width={420}
+            />
+            <ProFormText.Password
+              name="newPassword"
+              label="Mật khẩu mới"
+              fieldProps={{
+                style: { height: '40px' }
+              }}
+              rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
+              placeholder="Nhập mật khẩu mới"
+              width={420}
+            />
+            <ProFormText.Password
+              name="confirmPassword"
+              label="Xác nhận mật khẩu"
+              fieldProps={{
+                style: { height: '40px' }
+              }}
+              rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
+              placeholder="Nhập lại mật khẩu mới"
+              width={420}
+            />
+          </div>
+        </TabPane>
+      </Tabs>
+
     </ModalForm>
   );
 };

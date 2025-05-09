@@ -45,7 +45,7 @@ const ProfileHeader = ({
                             icon={<EditOutlined />}
                             style={{border: 'none'}}
                         >
-                            Chỉnh sửa trang cá nhân
+                            Quản lý tài khoản
                         </Button>
                     </div>
                 </div>
