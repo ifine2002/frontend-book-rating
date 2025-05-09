@@ -1,53 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { callFetchUserProfile, callGetAllPostOfUser, callFetchAllBookFavoriteOfUser, calUnfollow, callCreateFollow } from "../../api/services";
-import { Link } from "react-router-dom";
-import { Card, Avatar, Tabs, Button, Typography, List, Divider, Empty, Spin, Modal } from "antd";
-import { 
-  UserOutlined, 
-  BookOutlined, 
-  AuditOutlined,
-  EditOutlined
-} from '@ant-design/icons';
+import { Empty, Spin } from "antd"; 
 import queryString from 'query-string';
 import SockJS from 'sockjs-client/dist/sockjs';
 import { Client } from '@stomp/stompjs';
-import BookList from '../../components/client/book/BookList'
 import { useAppSelector } from './../../redux/hooks';
 import './../../styles/ProfilePage.scss';
 import ChangeInfoModal from "../../components/client/my-profile/ChangeInfoModal";
-
-const { Title, Text } = Typography;
-const { TabPane } = Tabs;
-
-// Hàm throttle để cải thiện hiệu suất khi cuộn
-const throttle = (func, delay) => {
-  let lastCall = 0;
-  return (...args) => {
-    const now = new Date().getTime();
-    if (now - lastCall < delay) {
-      return;
-    }
-    lastCall = now;
-    return func(...args);
-  };
-};
-
-// Hàm tính chiều rộng của scrollbar
-const getScrollbarWidth = () => {
-    const outer = document.createElement('div');
-    outer.style.visibility = 'hidden';
-    outer.style.overflow = 'scroll';
-    document.body.appendChild(outer);
-    const inner = document.createElement('div');
-    outer.appendChild(inner);
-    const scrollbarWidth = outer.offsetWidth - inner.offsetWidth;
-    outer.parentNode.removeChild(outer);
-    return scrollbarWidth;
-  };
+import ProfileHeader from "../../components/client/my-profile/ProfileHeader";
+import FollowersModal from "../../components/client/my-profile/FollowersModal";
+import ProfileTabs from "../../components/client/my-profile/ProfileTabs";
+import { throttle, getScrollbarWidth } from '../../utils/scrollUtils';
 
 const ProfilePage = () => {
     const [userData, setUserData] = useState(null);
-    const [isFollowing, setIsFollowing] = useState(false);
     const [loading, setLoading] = useState(true);
     const [followerVisible, setFollowerVisible] = useState(false);
     const [activeModalTab, setActiveModalTab] = useState("followers");
@@ -98,14 +64,13 @@ const ProfilePage = () => {
             }
         };
 
-        if (user?.id) { // Chỉ fetch khi có user.id
+        if (user?.id) {
             fetchUserProfile();
         }
-    }, [id, user?.id]); // Thêm user?.id vào dependencies
+    }, [id, user?.id]);
     
     // Khởi tạo WebSocket
     useEffect(() => {
-        // Tạo WebSocket connection
         const socket = new SockJS('http://localhost:8080/ws');
         const client = new Client({
             webSocketFactory: () => socket,
@@ -117,17 +82,12 @@ const ProfilePage = () => {
             heartbeatOutgoing: 4000,
         });
 
-        // Khi kết nối thành công
         client.onConnect = () => {
             console.log('Connected to WebSocket');
-
-            // Subscribe đến topic cập nhật sách
             client.subscribe('/topic/books', (message) => {
                 try {
                     const notificationData = JSON.parse(message.body);
                     console.log('WebSocket notification received:', notificationData);
-                    
-                    // Cập nhật lại dữ liệu khi có sự thay đổi
                     if (notificationData.userId === id) {
                         resetAndFetchBooks();
                     }
@@ -137,22 +97,18 @@ const ProfilePage = () => {
             });
         };
 
-        // Khi mất kết nối
         client.onDisconnect = () => {
             console.log('Disconnected from WebSocket');
         };
 
-        // Khi có lỗi
         client.onStompError = (frame) => {
             console.error('Broker reported error: ' + frame.headers['message']);
             console.error('Additional details: ' + frame.body);
         };
 
-        // Kết nối
         client.activate();
         setStompClient(client);
 
-        // Cleanup khi unmount
         return () => {
             if (client) {
                 client.deactivate();
@@ -177,12 +133,11 @@ const ProfilePage = () => {
             totalPages: 0
         }));
         
-        fetchBooks(1); // Trang 1
+        fetchBooks(1);
     };
 
     // Hàm lấy dữ liệu sách từ API
     const fetchBooks = async (pageNumber) => {
-        // Ngăn ngừa fetch trùng lặp
         if (isLoading.current) {
             console.log('Fetch already in progress, skipping');
             return Promise.resolve();
@@ -193,12 +148,7 @@ const ProfilePage = () => {
         setLoading(true);
         
         try {
-            // API sử dụng 0-based index
             const pageForApi = pageNumber - 1;
-            
-            console.log(`Fetching user posts, page ${pageNumber} (API page: ${pageForApi})...`);
-            
-            // Tạo query string với page, size, sort và userId
             const params = {
                 page: pageForApi,
                 size: pagination.pageSize,
@@ -206,24 +156,17 @@ const ProfilePage = () => {
                 userId: id
             };
 
-
-            // Gọi API
             const query = queryString.stringify(params);
             const response = await callGetAllPostOfUser(userData.email, query);
             if (response && response.data) {
                 const { result, totalPages, totalElements } = response.data;
                 
-                console.log(`API returned ${result?.length || 0} books (page ${pageNumber}/${totalPages})`);
-                
-                // Nếu đây là lần fetch đầu tiên hoặc page là 1, thay thế books
                 if (pageNumber === 1) {
                     setBooks(result || []);
                 } else {
-                    // Nếu không, thêm vào danh sách hiện tại
                     setBooks(prevBooks => [...prevBooks, ...(result || [])]);
                 }
                 
-                // Cập nhật pagination
                 setPagination({
                     page: pageNumber,
                     pageSize: pagination.pageSize,
@@ -243,17 +186,14 @@ const ProfilePage = () => {
 
     useEffect(() => {
         if (followerVisible, editProfileVisible) {
-            // Lấy giá trị ban đầu
             const originalBodyPaddingRight = window.getComputedStyle(document.body).paddingRight;
             const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
             const scrollbarWidth = getScrollbarWidth();
             const bodyPaddingRightValue = parseInt(originalBodyPaddingRight, 10) || 0;
     
-            // Thêm padding cho body
             document.body.style.overflow = 'hidden';
             document.body.style.paddingRight = `${bodyPaddingRightValue + scrollbarWidth}px`;
     
-            // Thêm padding cho header
             const header = document.querySelector('.header-section');
             let originalHeaderPaddingRight = '0px';
             
@@ -263,7 +203,6 @@ const ProfilePage = () => {
                 header.style.paddingRight = `${currentHeaderPadding + scrollbarWidth}px`;
             }
     
-            // Hàm cleanup
             return () => {
                 document.body.style.overflow = originalBodyOverflow;
                 document.body.style.paddingRight = originalBodyPaddingRight;
@@ -284,13 +223,9 @@ const ProfilePage = () => {
 
         const nextPage = pagination.page + 1;
         
-        console.log(`Load more triggered. Loading page ${nextPage}`);
-        
         if (nextPage <= pagination.totalPages) {
-            // Lưu lại vị trí scroll hiện tại
             const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
             fetchBooks(nextPage).then(() => {
-                // Khôi phục lại vị trí scroll sau khi hoàn thành
                 setTimeout(() => {
                     window.scrollTo({
                         top: scrollPosition,
@@ -298,17 +233,13 @@ const ProfilePage = () => {
                     });
                 }, 100);
             });
-        } else {
-            console.log('No more pages to load');
         }
     };
 
     // Thêm effect để xử lý sự kiện scroll
     useEffect(() => {
-        // Xử lý sự kiện scroll với throttle để tăng hiệu suất
         const handleScroll = throttle(() => {
             if (headerRef.current) {
-                // Kiểm tra vị trí cuộn
                 const scrollPosition = window.scrollY || document.documentElement.scrollTop;
                 if (scrollPosition > 10) {
                     headerRef.current.classList.add('sticky');
@@ -316,16 +247,13 @@ const ProfilePage = () => {
                     headerRef.current.classList.remove('sticky');
                 }
             }
-        }, 100); // Throttle với 100ms
+        }, 100);
 
-        // Kích hoạt ngay lập tức để đặt trạng thái ban đầu
         handleScroll();
         
-        // Thêm sự kiện listener
         window.addEventListener('scroll', handleScroll);
         window.addEventListener('resize', handleScroll);
         
-        // Cleanup
         return () => {
             window.removeEventListener('scroll', handleScroll);
             window.removeEventListener('resize', handleScroll);
@@ -348,7 +276,7 @@ const ProfilePage = () => {
             totalElements: 0,
             totalPages: 0
         }));
-        fetchFavoriteBooks(1, 5); // Mặc định hiển thị 5 sách
+        fetchFavoriteBooks(1, 5);
     };
 
     // Hàm lấy dữ liệu sách yêu thích từ API
@@ -410,7 +338,6 @@ const ProfilePage = () => {
                     followerId: userData.id,
                     followingId: userId
                 };
-                // Nếu đang follow thì unfollow
                 const res = await calUnfollow(follow);
                 console.log("check res", res);
                 setFollowingStates(prev => ({
@@ -418,7 +345,6 @@ const ProfilePage = () => {
                     [userId]: false
                 }));
             } else {
-                // Nếu chưa follow thì follow
                 const follow = {
                     followerId: userData.id,
                     followingId: userId
@@ -452,7 +378,6 @@ const ProfilePage = () => {
         if (userData?.follower) {
             const initialStates = {};
             userData.follower.forEach(user => {
-                // Kiểm tra xem user có tồn tại trong following không
                 const isFollowing = userData.following?.some(followingUser => followingUser.id === user.id);
                 initialStates[user.id] = isFollowing || false;
             });
@@ -464,7 +389,6 @@ const ProfilePage = () => {
     const handleFollowerFollowToggle = async (userId) => {
         try {
             if (followerStates[userId]) {
-                // Nếu đang follow thì unfollow
                 const follow = {
                     followerId: userData.id,
                     followingId: userId
@@ -476,7 +400,6 @@ const ProfilePage = () => {
                     [userId]: false
                 }));
             } else {
-                // Nếu chưa follow thì follow
                 const follow = {
                     followerId: userData.id,
                     followingId: userId
@@ -492,7 +415,6 @@ const ProfilePage = () => {
             console.error("Lỗi khi thực hiện follow/unfollow:", error);
         }
     };
-
 
     if (loading) {
         return (
@@ -528,186 +450,46 @@ const ProfilePage = () => {
         setFollowerVisible(false);
     };
 
-    
-
-    const handleEditProfileClose = () => {
-        setEditProfileVisible(false);
-    };
-
     return (
         <div className="max-w-6xl p-4">
-            {/* Header với thông tin người dùng */}
-            <div style={{ height: 'auto', minHeight: '160px' }}>
-                <Card 
-                    className="mb-6 shadow-md profile-user-header"
-                    ref={headerRef}
-                >
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                        <div className="md:col-span-2 flex justify-center items-center">
-                            <Avatar 
-                                src={userData.image} 
-                                icon={!userData.image && <UserOutlined />} 
-                                size={100}
-                                className="border border-gray-200"
-                            />
-                        </div>
-                        <div className="md:col-span-7 flex flex-col justify-center min-h-[120px]">
-                            <Title level={4} className="mb-1 whitespace-nowrap overflow-hidden text-ellipsis">
-                                {userData.fullName}
-                            </Title>
-                            <div className="flex gap-4 text-gray-600">
-                                <Text className="cursor-pointer hover:text-blue-500" onClick={showFollowersModal}>
-                                    <span className="font-bold">{userData.follower?.length || 0}</span> Follower
-                                </Text>
-                                <Text className="cursor-pointer hover:text-blue-500" onClick={showFollowingModal}>
-                                    <span className="font-bold">{userData.following?.length || 0}</span> Đã follow
-                                </Text>
-                            </div>
-                        </div>
-                        <div className="md:col-span-3 flex items-center justify-center md:justify-end">
-                            <Button
-                                onClick={() => editProfile()}
-                                className="flex items-center gap-2 px-4 py-2 rounded-md !text-black text-base transition bg-[#e2e5e9] hover:!bg-[#bcbfc3]"
-                                icon={<EditOutlined />}
-                                style={{border: 'none'}}
-                            >
-                                Chỉnh sửa trang cá nhân
-                            </Button>
-                        </div>
-                    </div>
-                </Card>
-            </div>
+            <ProfileHeader
+                userData={userData}
+                headerRef={headerRef}
+                showFollowersModal={showFollowersModal}
+                showFollowingModal={showFollowingModal}
+                editProfile={editProfile}
+            />
 
-            {/* Modal kết hợp người theo dõi và đang theo dõi */}
-            <Modal
-                title="Người dùng"
-                open={followerVisible}
-                onCancel={handleModalClose}
-                footer={null}
-                width={600}
-                getContainer={false}
-            >
-                <Tabs 
-                    defaultActiveKey={activeModalTab}
-                    activeKey={activeModalTab}
-                    onChange={(key) => setActiveModalTab(key)}
-                >
-                    <TabPane tab={`Follower ${userData.follower?.length || 0}`} key="followers">
-                        {userData.follower && userData.follower.length > 0 ? (
-                            <List
-                                itemLayout="horizontal"
-                                dataSource={userData.follower}
-                                renderItem={(user, index) => (
-                                    <>
-                                        <List.Item
-                                            actions={[
-                                                <Button 
-                                                    key="follow-back" 
-                                                    size="small"
-                                                    onClick={() => handleFollowerFollowToggle(user.id)}
-                                                    className={`${followerStates[user.id] ? 'bg-gray-500 hover:!bg-gray-600' : 'bg-blue-500 hover:!bg-blue-600'} w-20 !text-white hover:!text-white`}
-                                                    style={{ border: 'none' }}
-                                                >
-                                                    {followerStates[user.id] ? 'Đã follow' : 'Follow lại'}
-                                                </Button>
-                                            ]}
-                                        >
-                                            <List.Item.Meta
-                                                avatar={<Avatar src={user.image} icon={!user.image && <UserOutlined />} />}
-                                                title={<Link to={`/profile/${user.id}`} onClick={handleModalClose}>{user.fullName}</Link>}
-                                            />
-                                        </List.Item>
-                                        {index < userData.follower.length - 1 && <Divider className="my-2" />}
-                                    </>
-                                )}
-                            />
-                        ) : (
-                            <Empty description="Không có người theo dõi nào" />
-                        )}
-                    </TabPane>
-                    <TabPane tab={`Đã follow ${userData.following?.length || 0}`} key="following">
-                        {userData.following && userData.following.length > 0 ? (
-                            <List
-                                itemLayout="horizontal"
-                                dataSource={userData.following}
-                                renderItem={(user, index) => (
-                                    <>
-                                        <List.Item
-                                            actions={[
-                                                <Button 
-                                                    key="unfollow" 
-                                                    size="small"
-                                                    onClick={() => handleFollowToggle(user.id)}
-                                                    className={`${followingStates[user.id] ? 'bg-gray-500 hover:!bg-gray-600' : 'bg-blue-500 hover:!bg-blue-600'} w-20 !text-white hover:!text-white`}
-                                                    style={{ border: 'none' }}
-                                                >
-                                                    {followingStates[user.id] ? 'Đã follow' : 'Follow'}
-                                                </Button>
-                                            ]}
-                                        >
-                                            <List.Item.Meta
-                                                avatar={<Avatar src={user.image} icon={!user.image && <UserOutlined />} />}
-                                                title={<Link to={`/profile/${user.id}`} onClick={handleModalClose}>{user.fullName}</Link>}
-                                            />
-                                        </List.Item>
-                                        {index < userData.following.length - 1 && <Divider className="my-2" />}
-                                    </>
-                                )}
-                            />
-                        ) : (
-                            <Empty description="Không theo dõi ai" />
-                        )}
-                    </TabPane>
-                </Tabs>
-            </Modal>
+            <FollowersModal
+                followerVisible={followerVisible}
+                handleModalClose={handleModalClose}
+                activeModalTab={activeModalTab}
+                setActiveModalTab={setActiveModalTab}
+                userData={userData}
+                followerStates={followerStates}
+                followingStates={followingStates}
+                handleFollowerFollowToggle={handleFollowerFollowToggle}
+                handleFollowToggle={handleFollowToggle}
+            />
 
-            {/* Tabs */}
-            <div className="profile-content">
-                <Tabs defaultActiveKey="post" className="profile-tabs mt-6">
-                    <TabPane 
-                        tab={<span><AuditOutlined />Bài Viết</span>} 
-                        key="post"
-                    >
-                        <div className="grid grid-cols-1 gap-6">
-                            <div>
-                                <Title level={5} className="mb-4">
-                                    Bài viết của {userData.fullName}
-                                </Title>
-                                <BookList
-                                    books={books}
-                                    loading={loading}
-                                    pagination={pagination}
-                                    onLoadMore={handleLoadMore}
-                                />
-                            </div>
-                        </div>
-                    </TabPane>
-                    <TabPane 
-                        tab={<span><BookOutlined />Yêu Thích</span>} 
-                        key="books"
-                    >
-                        <div className="grid grid-cols-1 gap-6">
-                            <div>
-                                <Title level={5} className="mb-4">Sách yêu thích</Title>
-                                <BookList
-                                    books={favoriteBooks}
-                                    loading={loadingFavorite}
-                                    pagination={favoritePagination}
-                                    onLoadMore={handleLoadMoreFavorite}
-                                    onPageChange={handleFavoritePageChange}
-                                    simple={true}
-                                />
-                            </div>
-                        </div>
-                    </TabPane>
-                </Tabs>
-            </div>
+            <ProfileTabs
+                userData={userData}
+                books={books}
+                loading={loading}
+                pagination={pagination}
+                onLoadMore={handleLoadMore}
+                favoriteBooks={favoriteBooks}
+                loadingFavorite={loadingFavorite}
+                favoritePagination={favoritePagination}
+                onLoadMoreFavorite={handleLoadMoreFavorite}
+                onFavoritePageChange={handleFavoritePageChange}
+            />
 
-        <ChangeInfoModal
-            editProfileVisible={editProfileVisible}
-            setEditProfileVisible={setEditProfileVisible}
-            id={id}
-        />
+            <ChangeInfoModal
+                editProfileVisible={editProfileVisible}
+                setEditProfileVisible={setEditProfileVisible}
+                id={id}
+            />
         </div>
     );
 };
