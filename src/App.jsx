@@ -33,24 +33,27 @@ import WelcomeLayout from './components/client/WelcomeLayout';
 
 export default function App() {
   const dispatch = useAppDispatch();
+  const token = localStorage.getItem('access_token');
 
   useEffect(() => {
-    dispatch(fetchAccount());
-  }, [dispatch]);
+    if (token) {
+      dispatch(fetchAccount());
+    }
+  }, [dispatch, token]);
 
   const router = createBrowserRouter([
     {
       path: "/",
-      element: (<LayoutClient />),
+      element: (
+        <ProtectedRoute>
+          <LayoutClient />
+        </ProtectedRoute>
+      ),
       errorElement: <NotFound />,
       children: [
         {
           index: true,
-          element: (
-            <ProtectedRoute>
-              <HomePage />
-            </ProtectedRoute>
-          )
+          element: <HomePage />
         },
         {
           path: "book/:id",

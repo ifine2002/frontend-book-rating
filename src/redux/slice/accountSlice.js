@@ -9,10 +9,10 @@ export const fetchAccount = createAsyncThunk(
         return response.data;
     }
 )
-
+const token = localStorage.getItem('access_token');
 const initialState = {
     isAuthenticated: false,
-    isLoading: true,
+    isLoading: !!token,
     isRefreshToken: false,
     errorRefreshToken: "",
     user: {
