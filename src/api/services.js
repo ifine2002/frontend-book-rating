@@ -120,6 +120,38 @@ export const callUpdateUser = (userData, userId) => {
   });
 }
 
+export const callUpdateUserProfile = (userData) => {
+   // Tạo FormData object
+   const formData = new FormData();
+   if (userData.fullName) formData.append('fullName', userData.fullName);
+   // Xử lý file image hoặc flag xóa image
+   if (userData.image) {
+     formData.append('image', userData.image);
+   } else if (userData.deleteImage === true) {
+     // Thêm flag xóa ảnh
+     formData.append('deleteImage', 'true');
+   }
+   if (userData.phone) formData.append('phone', userData.phone);
+   if (userData.gender) formData.append('gender', userData.gender);
+   // Chuyển đổi date thành định dạng ISO cho LocalDate
+   if (userData.userDOB) {
+     // Nếu là Date object
+     if (userData.userDOB instanceof Date) {
+       const isoDate = userData.userDOB.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+       formData.append('userDOB', isoDate);
+     } else {
+       // Nếu đã là string đúng định dạng
+       formData.append('userDOB', userData.userDOB);
+     }
+   }
+   if (userData.address) formData.append('address', userData.address);
+  return axios.put(`/user/change-info`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+}
+
 export const callDeleteUser = (id) => {
   return axios.delete(`/user/${id}`);
 }
@@ -129,7 +161,7 @@ export const callFetchUser = (query) => {
 }
 
 export const callFetchUserDetail = (id) => {
-  return axios.get(`/user/detail/${id}`);
+  return axios.get(`/user/${id}`);
 }
 
 export const callFetchUserProfile = (id) => {

@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { callFetchUserProfile, callGetAllPostOfUser, callFetchAllBookFavoriteOfUser, calUnfollow, callCreateFollow } from "../../api/services";
-import { useParams, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Card, Avatar, Tabs, Button, Typography, List, Divider, Empty, Spin, Modal } from "antd";
 import { 
   UserOutlined, 
   BookOutlined, 
   AuditOutlined,
+  EditOutlined
 } from '@ant-design/icons';
 import queryString from 'query-string';
 import SockJS from 'sockjs-client/dist/sockjs';
@@ -13,6 +14,7 @@ import { Client } from '@stomp/stompjs';
 import BookList from '../../components/client/book/BookList'
 import { useAppSelector } from './../../redux/hooks';
 import './../../styles/ProfilePage.scss';
+import ChangeInfoModal from "../../components/client/my-profile/ChangeInfoModal";
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -51,6 +53,7 @@ const ProfilePage = () => {
     const [activeModalTab, setActiveModalTab] = useState("followers");
     const [followingStates, setFollowingStates] = useState({});
     const [followerStates, setFollowerStates] = useState({});
+    const [editProfileVisible, setEditProfileVisible] = useState(false);
     
     const user = useAppSelector(state => state.account.user);
     const id = user.id;
@@ -239,7 +242,7 @@ const ProfilePage = () => {
     };
 
     useEffect(() => {
-        if (followerVisible) {
+        if (followerVisible, editProfileVisible) {
             // Lấy giá trị ban đầu
             const originalBodyPaddingRight = window.getComputedStyle(document.body).paddingRight;
             const originalBodyOverflow = window.getComputedStyle(document.body).overflow;
@@ -270,7 +273,7 @@ const ProfilePage = () => {
                 }
             };
         }
-    }, [followerVisible]);
+    }, [followerVisible, editProfileVisible]);
 
     // Xử lý khi người dùng cuộn xuống để tải thêm sách
     const handleLoadMore = () => {
@@ -508,7 +511,7 @@ const ProfilePage = () => {
     }
 
     const editProfile = () => {
-
+        setEditProfileVisible(true);
     }
 
     const showFollowersModal = () => {
@@ -523,6 +526,12 @@ const ProfilePage = () => {
 
     const handleModalClose = () => {
         setFollowerVisible(false);
+    };
+
+    
+
+    const handleEditProfileClose = () => {
+        setEditProfileVisible(false);
     };
 
     return (
@@ -556,11 +565,13 @@ const ProfilePage = () => {
                             </div>
                         </div>
                         <div className="md:col-span-3 flex items-center justify-center md:justify-end">
-                            <Button 
+                            <Button
                                 onClick={() => editProfile()}
-                                className="flex items-center gap-2 px-4 py-2 rounded-md text-white text-base transition bg-blue-600 hover:bg-blue-700"
+                                className="flex items-center gap-2 px-4 py-2 rounded-md !text-black text-base transition bg-[#e2e5e9] hover:!bg-[#bcbfc3]"
+                                icon={<EditOutlined />}
+                                style={{border: 'none'}}
                             >
-                                Chỉnh sửa thông tin
+                                Chỉnh sửa trang cá nhân
                             </Button>
                         </div>
                     </div>
@@ -691,6 +702,12 @@ const ProfilePage = () => {
                     </TabPane>
                 </Tabs>
             </div>
+
+        <ChangeInfoModal
+            editProfileVisible={editProfileVisible}
+            setEditProfileVisible={setEditProfileVisible}
+            id={id}
+        />
         </div>
     );
 };
