@@ -6,6 +6,7 @@ const { Meta } = Card;
 const { Text } = Typography;
 
 const SimpleBookCard = ({ book }) => {
+  
   const defaultImage = 'https://placehold.co/300x400?text=No+Image';
 
   return (
@@ -15,7 +16,7 @@ const SimpleBookCard = ({ book }) => {
         cover={
           <img
             alt={book.name}
-            src={book.bookImage || book.image || defaultImage}
+            src={book.image || defaultImage}
             style={{ height: 220, objectFit: 'cover' }}
           />
         }
@@ -26,9 +27,9 @@ const SimpleBookCard = ({ book }) => {
           title={<Text ellipsis style={{ width: 150 }}>{book.name}</Text>}
           description={
             <div style={{ marginTop: 8 }}>
-              <Rate allowHalf disabled value={book.averageRating || 0} style={{ fontSize: 16 }} />
+              <Rate allowHalf disabled value={book?.averageRating || 0} style={{ fontSize: 16 }} />
               <span style={{ marginLeft: 8, color: '#888' }}>
-                {book.averageRating ? book.averageRating.toFixed(1) : '0.0'}
+                {book?.averageRating ? book?.averageRating.toFixed(1) : '0.0'}
               </span>
             </div>
           }

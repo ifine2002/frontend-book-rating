@@ -621,6 +621,13 @@ export const callGetHomeBooks = (query) => {
 }
 
 /**
+ * Explore Page
+ */
+export const callGetExploreBooks = (query) => {
+  return axios.get(`/book/explore?${query}`);
+}
+
+/**
  * Search Home Page
  */
 export const callSearchHomeBook = (query) => {

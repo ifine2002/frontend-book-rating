@@ -31,6 +31,7 @@ import Home from './pages/client/Home';
 import ProtectedRoute from './components/share/ProtectedRoute';
 import WelcomeLayout from './components/client/WelcomeLayout';
 import VerifyEmailPage from './pages/auth/verify-email';
+import ExplorePage from './pages/client/ExplorePage';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -75,6 +76,10 @@ export default function App() {
         {
           path: "/my-profile",
           element: <MyProfile/>
+        },
+        {
+          path: "/explore",
+          element: <ExplorePage />
         }
       ],
     },

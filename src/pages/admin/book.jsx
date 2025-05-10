@@ -1,6 +1,6 @@
 import DataTable from "./../../components/client/data-table/index";
 import { fetchBook } from "./../../redux/slice/bookSlice";
-import { DeleteOutlined, EditOutlined, PlusOutlined, EyeOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Popconfirm, Space, message, notification } from "antd";
 import { useState, useRef } from 'react';
 import dayjs from 'dayjs';
@@ -226,9 +226,8 @@ const BookPage = () => {
                 dataSource={books}
                 request={async (params, sort, filter) => {
                     const query = buildQuery(params, sort, filter);
+                    console.log(query);
                     dispatch(fetchBook({ query }))
-                    console.log("Current params:", params);
-                    console.log("API data:", data);
                 }}
                 scroll={{ x: true }}
                 pagination={

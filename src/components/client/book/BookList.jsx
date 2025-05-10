@@ -55,7 +55,7 @@ const BookList = ({ books, loading, pagination, onLoadMore, simple, onPageChange
 
   // Xác định nếu còn dữ liệu để tải
   const hasMoreData = pagination && pagination.page <= pagination.totalPages;
-
+  console.log("check books", books);
   if (simple) {
     // Phân trang dạng custom
     const { page, pageSize, totalElements } = pagination || {};
