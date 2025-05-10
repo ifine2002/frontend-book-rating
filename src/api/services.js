@@ -5,10 +5,11 @@ import axios from './axios';
  *Module Auth
  */
 
-export const callRegister = (email, password, fullName) => {
+export const callRegister = (email, password,confirmPassword, fullName) => {
   const data = {
     email: email,
     password: password,
+    confirmPassword: confirmPassword,
     fullName: fullName
   }
   return axios.post('/auth/register', data)
@@ -21,6 +22,15 @@ export const callLogin = (email, password) => {
   }
   return axios.post('/auth/login', data)
 }
+
+export const callVerifyEmail = (email, token) => {
+  return axios.get(`/auth/verify?email=${email}&token=${token}`);
+}
+
+export const callResendToken = (email) => {
+  return axios.get(`/auth/resend-token?email=${email}`);
+}
+
 
 export const callFetchAccount = () => {
   return axios.get('/auth/account');

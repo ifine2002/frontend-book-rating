@@ -1,31 +1,35 @@
-import { Button, Divider, Form, Input, Row, Select, message, notification } from 'antd';
+import { Button, Divider, Form, Input, message, notification } from 'antd';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from '@/styles/auth.module.scss';
-const { Option } = Select;
-
+import { callRegister } from './../../api/services';
 
 const RegisterPage = () => {
     const navigate = useNavigate();
     const [isSubmit, setIsSubmit] = useState(false);
 
-    // const onFinish = async (values: IUser) => {
-    //     const { name, email, password, age, gender, address } = values;
-    //     setIsSubmit(true);
-    //     const res = await callRegister(name, email, password as string, +age, gender, address);
-    //     setIsSubmit(false);
-    //     if (res?.data?.id) {
-    //         message.success('Đăng ký tài khoản thành công!');
-    //         navigate('/login')
-    //     } else {
-    //         notification.error({
-    //             message: "Có lỗi xảy ra",
-    //             description:
-    //                 res.message && Array.isArray(res.message) ? res.message[0] : res.message,
-    //             duration: 5
-    //         })
-    //     }
-    // };
+    const onFinish = async (values) => {
+        const { email, password, confirmPassword, fullName } = values;
+        if (password !== confirmPassword) {
+            message.error('Mật khẩu xác nhận không khớp!');
+            return;
+        }
+        setIsSubmit(true);
+        const res = await callRegister(email, password, confirmPassword, fullName);
+        console.log('check res: ', res);
+        setIsSubmit(false);
+        if (res && res.status === 201) {
+            message.success('Đã đăng ký thành công! Vui lòng kiểm tra email để lấy mã xác thực.');
+            navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+        } else {
+            notification.error({
+                message: "Có lỗi xảy ra",
+                description:
+                    res.message && Array.isArray(res.message) ? res.message[0] : res.message,
+                duration: 5
+            })
+        }
+    };
 
 
     return (
@@ -41,13 +45,13 @@ const RegisterPage = () => {
                         < Form
                             name="basic"
                             // style={{ maxWidth: 600, margin: '0 auto' }}
-                            // onFinish={onFinish}
+                            onFinish={onFinish}
                             autoComplete="off"
                         >
                             <Form.Item
                                 labelCol={{ span: 24 }} //whole column
                                 label="Họ tên"
-                                name="name"
+                                name="fullName"
                                 rules={[{ required: true, message: 'Họ tên không được để trống!' }]}
                             >
                                 <Input />
@@ -69,6 +73,15 @@ const RegisterPage = () => {
                                 label="Mật khẩu"
                                 name="password"
                                 rules={[{ required: true, message: 'Mật khẩu không được để trống!' }]}
+                            >
+                                <Input.Password />
+                            </Form.Item>
+
+                            <Form.Item
+                                labelCol={{ span: 24 }} //whole column
+                                label="Nhập lại mật khẩu"
+                                name="confirmPassword"
+                                rules={[{ required: true, message: 'Nhập lại mật khẩu không được để trống!' }]}
                             >
                                 <Input.Password />
                             </Form.Item>

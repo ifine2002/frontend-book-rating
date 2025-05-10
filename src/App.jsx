@@ -30,6 +30,7 @@ import MyProfile from './pages/client/MyProfile';
 import Home from './pages/client/Home';
 import ProtectedRoute from './components/share/ProtectedRoute';
 import WelcomeLayout from './components/client/WelcomeLayout';
+import VerifyEmailPage from './pages/auth/verify-email';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -151,6 +152,10 @@ export default function App() {
     {
       path: "/register",
       element: <RegisterPage />,
+    },
+    {
+      path: "/verify-email",
+      element: <VerifyEmailPage />,
     },
   ]);
 

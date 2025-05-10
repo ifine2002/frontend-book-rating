@@ -45,7 +45,7 @@ const ViewDetailUser = (props) => {
                     <Descriptions.Item label="Gender">{userDetail?.gender}</Descriptions.Item>
                     <Descriptions.Item label="Phone">{userDetail?.phone}</Descriptions.Item>
 
-                    <Descriptions.Item label="Role">{userDetail?.role.name}</Descriptions.Item>
+                    <Descriptions.Item label="Role">{userDetail?.role?.name}</Descriptions.Item>
                     <Descriptions.Item label="Address">{userDetail?.address}</Descriptions.Item>
                     <Descriptions.Item label="Date Of Birth">{userDetail && userDetail.userDOB ? dayjs(userDetail.userDOB).format('DD-MM-YYYY') : ""}</Descriptions.Item>
                     <Descriptions.Item label="Status">{userDetail?.status}</Descriptions.Item>
