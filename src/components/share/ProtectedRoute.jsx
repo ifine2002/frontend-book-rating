@@ -7,8 +7,6 @@ const ProtectedRoute = ({ children }) => {
   const isLoading = useAppSelector((state) => state.account.isLoading);
   const token = localStorage.getItem('access_token');
 
-  console.log('ProtectedRoute:',  isLoading, isAuthenticated, token );
-
   // Nếu đang loading, không chuyển hướng
   if (isLoading) {
     return null;

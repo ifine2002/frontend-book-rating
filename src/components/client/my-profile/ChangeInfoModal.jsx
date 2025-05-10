@@ -11,6 +11,7 @@ const { TabPane } = Tabs;
 
 const ChangeInfoModal = ({ editProfileVisible, setEditProfileVisible, id }) => {
   const [form] = Form.useForm();
+  const [passwordForm] = Form.useForm();
   const [fileList, setFileList] = useState([]);
   const [isDeleteImage, setIsDeleteImage] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
@@ -89,7 +90,8 @@ const ChangeInfoModal = ({ editProfileVisible, setEditProfileVisible, id }) => {
     setFileList([]);
     setIsDeleteImage(false);
     setEditProfileVisible(false);
-}
+    setActiveModalTab("change-info");
+  }
 
   const handleFinish = async (values) => {
     if (activeModalTab === "change-info") {
@@ -98,7 +100,11 @@ const ChangeInfoModal = ({ editProfileVisible, setEditProfileVisible, id }) => {
         image = fileList[0].originFileObj;
       }
       const payload = {
-        ...values,
+        fullName: values.fullName,
+        gender: values.gender,
+        userDOB: values.userDOB,
+        address: values.address,
+        phone: values.phone,
         image,
         deleteImage: isDeleteImage ? true : undefined,
       };
@@ -108,24 +114,20 @@ const ChangeInfoModal = ({ editProfileVisible, setEditProfileVisible, id }) => {
       } else {
         message.error('Cập nhật thất bại!');
       }
-    } else if (activeModalTab === "change-password") {
-      const passwordData = {
-        oldPassword: values.oldPassword,
-        newPassword: values.newPassword,
-        confirmPassword: values.confirmPassword
-      };
-      const res = await callChangePassword(passwordData);
-      
-      form.setFieldsValue({
-        oldPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
+    }
+  };
+
+  const handleChangePassword = async (values) => {
+    try {
+      const res = await callChangePassword(values);
       if (res && res.status === 200) {
-        message.success('Cập nhật thành công!');
+        message.success('Đổi mật khẩu thành công!');
+        passwordForm.resetFields();
       } else {
-        message.error('Cập nhật thất bại!');
+        message.error('Đổi mật khẩu thất bại!');
       }
+    } catch (error) {
+      message.error('Đổi mật khẩu thất bại!');
     }
   };
 
@@ -143,9 +145,13 @@ const ChangeInfoModal = ({ editProfileVisible, setEditProfileVisible, id }) => {
         width: isMobile ? "100%" : '800px',
         keyboard: false,
         maskClosable: true,
-        okText: activeModalTab === "change-password" ? "Đổi mật khẩu" : "Lưu",
         cancelText: "Hủy",
         getContainer: false
+      }}
+      submitter={{
+        render: (props, dom) => {
+          return activeModalTab === "change-info" ? dom : [];
+        }
       }}
       scrollToFirstError={true}
       preserve={false}
@@ -242,41 +248,61 @@ const ChangeInfoModal = ({ editProfileVisible, setEditProfileVisible, id }) => {
           </div>
         </TabPane>
         <TabPane tab="Thay đổi mật khẩu" key="change-password">
-          <div className='flex flex-col gap-4 justify-center items-center mt-4'>
-            <ProFormText.Password
-              name="oldPassword"
-              label="Mật khẩu cũ"
-              fieldProps={{
-                style: { height: '40px' }
-              }}
-              rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
-              placeholder="Nhập mật khẩu cũ"
-              width={420}
-            />
-            <ProFormText.Password
-              name="newPassword"
-              label="Mật khẩu mới"
-              fieldProps={{
-                style: { height: '40px' }
-              }}
-              rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
-              placeholder="Nhập mật khẩu mới"
-              width={420}
-            />
-            <ProFormText.Password
-              name="confirmPassword"
-              label="Xác nhận mật khẩu"
-              fieldProps={{
-                style: { height: '40px' }
-              }}
-              rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
-              placeholder="Nhập lại mật khẩu mới"
-              width={420}
-            />
-          </div>
+          <Form
+            form={passwordForm}
+            onFinish={handleChangePassword}
+            layout="vertical"
+          >
+            <div className='flex flex-col gap-4 justify-center items-center mt-4'>
+              <ProFormText.Password
+                name="oldPassword"
+                label="Mật khẩu cũ"
+                fieldProps={{
+                  style: { height: '40px' }
+                }}
+                rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
+                placeholder="Nhập mật khẩu cũ"
+                width={420}
+              />
+              <ProFormText.Password
+                name="newPassword"
+                label="Mật khẩu mới"
+                fieldProps={{
+                  style: { height: '40px' }
+                }}
+                rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
+                placeholder="Nhập mật khẩu mới"
+                width={420}
+              />
+              <ProFormText.Password
+                name="confirmPassword"
+                label="Xác nhận mật khẩu"
+                fieldProps={{
+                  style: { height: '40px' }
+                }}
+                rules={[
+                  { required: true, message: 'Vui lòng không bỏ trống' },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value || getFieldValue('newPassword') === value) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error('Mật khẩu xác nhận không khớp!'));
+                    },
+                  }),
+                ]}
+                placeholder="Nhập lại mật khẩu mới"
+                width={420}
+              />
+            </div>
+            <div className="flex justify-center mt-4">
+              <Button type="primary" onClick={() => passwordForm.submit()}>
+                Đổi mật khẩu
+              </Button>
+            </div>
+          </Form>
         </TabPane>
       </Tabs>
-
     </ModalForm>
   );
 };
