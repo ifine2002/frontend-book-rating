@@ -154,6 +154,7 @@ const ExplorePage = () => {
 
     return (
         <div className="flex flex-col gap-6 justify-center items-center">
+            <div className="text-2xl font-bold">Khám phá sách</div>
             <div className="flex gap-4 mb-4">
                 <Input
                     placeholder="Tìm theo tác giả"

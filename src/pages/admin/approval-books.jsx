@@ -355,15 +355,16 @@ const ApprovalBooksPage = () => {
                                 pages: res.data.totalPages,
                                 total: res.data.totalElements
                             });
+                            setIsFetching(false);
                         }
+                        // setIsFetching(false);
                     } catch (error) {
                         console.error("Lỗi khi lấy danh sách sách:", error);
                         notification.error({
                             message: 'Có lỗi xảy ra',
                             description: 'Không thể lấy danh sách sách chờ duyệt'
                         });
-                    } finally {
-                        setIsFetching(false);
+                        // setIsFetching(true);
                     }
                 }}
                 scroll={{ x: true }}

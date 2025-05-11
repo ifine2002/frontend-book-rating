@@ -1,4 +1,4 @@
-import { grey, green, blue, red, orange } from '@ant-design/colors';
+import { grey, green, blue, red, orange, yellow } from '@ant-design/colors';
 import groupBy from 'lodash/groupBy';
 import map from 'lodash/map';
 
@@ -12,6 +12,8 @@ export function colorMethod(method) {
             return blue[6]
         case "DELETE":
             return red[6]
+        case "PATCH":
+            return yellow[6]
         default:
             return grey[10];
     }

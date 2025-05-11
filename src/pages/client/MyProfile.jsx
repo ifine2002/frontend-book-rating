@@ -20,6 +20,7 @@ const ProfilePage = () => {
     const [followingStates, setFollowingStates] = useState({});
     const [followerStates, setFollowerStates] = useState({});
     const [editProfileVisible, setEditProfileVisible] = useState(false);
+    const [activeTab, setActiveTab] = useState("post");
     
     const user = useAppSelector(state => state.account.user);
     const id = user.id;
@@ -48,6 +49,7 @@ const ProfilePage = () => {
     });
     const isFavoriteLoading = useRef(false);
     const [loadingFavorite, setLoadingFavorite] = useState(false);
+    const [favoriteLoaded, setFavoriteLoaded] = useState(false);
 
     useEffect(() => {
         const fetchUserProfile = async () => {
@@ -93,6 +95,30 @@ const ProfilePage = () => {
                     }
                 } catch (error) {
                     console.error('Error parsing WebSocket message:', error);
+                }
+            });
+            // Subscribe đến topic duyệt sách từ trang admin approval
+            client.subscribe('/topic/admin-books', (message) => {
+                try {
+                    const notificationData = JSON.parse(message.body);
+                    if (notificationData.action === 'approve') {
+                        const approvedBook = notificationData.data;
+                        // Chỉ thêm vào danh sách nếu sách thuộc về user này
+                        if (approvedBook.user?.id === id) {
+                            setBooks(prevBooks => {
+                                if (prevBooks.some(book => book.bookId === approvedBook.bookId)) {
+                                    return prevBooks;
+                                }
+                                return [approvedBook, ...prevBooks];
+                            });
+                            setPagination(prev => ({
+                                ...prev,
+                                totalElements: prev.totalElements + 1
+                            }));
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error parsing admin book WebSocket message:', error);
                 }
             });
         };
@@ -260,12 +286,15 @@ const ProfilePage = () => {
         };
     }, []);
 
-    // Fetch favorite books lần đầu khi component mount
-    useEffect(() => {
-        if (id && userData?.email) {
+    // Xử lý khi tab thay đổi
+    const handleTabChange = (activeKey) => {
+        setActiveTab(activeKey);
+        
+        // Chỉ gọi API fetchFavoriteBooks khi chuyển sang tab "books" (Yêu thích)
+        if (activeKey === "books" && !favoriteLoaded && userData?.id) {
             resetAndFetchFavoriteBooks();
         }
-    }, [id, userData]);
+    };
 
     // Reset dữ liệu và fetch lại từ đầu cho sách yêu thích
     const resetAndFetchFavoriteBooks = () => {
@@ -304,6 +333,7 @@ const ProfilePage = () => {
                     totalElements,
                     totalPages
                 });
+                setFavoriteLoaded(true);
             }
             return Promise.resolve();
         } catch (error) {
@@ -483,6 +513,8 @@ const ProfilePage = () => {
                 favoritePagination={favoritePagination}
                 onLoadMoreFavorite={handleLoadMoreFavorite}
                 onFavoritePageChange={handleFavoritePageChange}
+                onTabChange={handleTabChange}
+                activeTab={activeTab}
             />
 
             <ChangeInfoModal

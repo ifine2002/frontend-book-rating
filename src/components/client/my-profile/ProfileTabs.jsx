@@ -15,11 +15,13 @@ const ProfileTabs = ({
     loadingFavorite,
     favoritePagination,
     onLoadMoreFavorite,
-    onFavoritePageChange
+    onFavoritePageChange,
+    onTabChange,
+    activeTab
 }) => {
     return (
         <div className="profile-content">
-            <Tabs defaultActiveKey="post" className="profile-tabs mt-6">
+            <Tabs defaultActiveKey="post" activeKey={activeTab} onChange={onTabChange} className="profile-tabs mt-6">
                 <TabPane 
                     tab={<span><AuditOutlined />Bài Viết</span>} 
                     key="post"

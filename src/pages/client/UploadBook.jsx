@@ -27,20 +27,20 @@ const UploadBookPage = () => {
 
     // Fetch categories
     useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const res = await callFetchCategory('');
-                console.log(res);
-                if (res && res.data) {
-                    setCategories(res.data.result);
-                }
-            } catch (error) {
-                console.error('Lỗi khi lấy danh mục:', error);
-            }
-        };
         setFileList([]);
-        fetchCategories();
     }, []);
+
+    const fetchCategories = async () => {
+        try {
+            const res = await callFetchCategory('');
+            console.log(res);
+            if (res && res.data) {
+                setCategories(res.data.result);
+            }
+        } catch (error) {
+            console.error('Lỗi khi lấy danh mục:', error);
+        }
+    };
 
     // WebSocket connection
     useEffect(() => {
@@ -77,6 +77,7 @@ const UploadBookPage = () => {
     // Open modal
     const showModal = () => {
         setIsModalOpen(true);
+        fetchCategories();
     };
 
     // Cancel modal

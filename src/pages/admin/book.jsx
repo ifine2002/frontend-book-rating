@@ -226,7 +226,6 @@ const BookPage = () => {
                 dataSource={books}
                 request={async (params, sort, filter) => {
                     const query = buildQuery(params, sort, filter);
-                    console.log(query);
                     dispatch(fetchBook({ query }))
                 }}
                 scroll={{ x: true }}

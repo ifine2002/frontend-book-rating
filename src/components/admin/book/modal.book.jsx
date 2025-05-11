@@ -13,14 +13,10 @@ const ModalBook = (props) => {
 
     const [form] = Form.useForm();
 
-    useEffect(() => {
-        if (openModal) {
-            fetchCategory();
-        }
-    }, [openModal]);
 
     useEffect(() => {
         const init = async () => {
+            await fetchCategory();
             setIsDeleteImage(false);
         
             if (dataInit?.id) {
@@ -185,6 +181,7 @@ const ModalBook = (props) => {
         setFileList([]);
         setIsDeleteImage(false);
         setOpenModal(false);
+        setOptionsCategory([]);
     }
 
     return (
