@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Button, Input, DatePicker, Select, Typography, Form, Upload, message, notification, Image, Avatar } from 'antd';
 import { CloudUploadOutlined, UserOutlined, PlusOutlined, CloseOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { callUploadBook, callFetchCategory } from '../../api/services';
+import { callUploadBook, callFetchCategoriesUpload } from '../../api/services';
 import dayjs from 'dayjs';
 import SockJS from 'sockjs-client/dist/sockjs';
 import { Client } from '@stomp/stompjs';
@@ -32,7 +32,7 @@ const UploadBookPage = () => {
 
     const fetchCategories = async () => {
         try {
-            const res = await callFetchCategory('');
+            const res = await callFetchCategoriesUpload('');
             console.log(res);
             if (res && res.data) {
                 setCategories(res.data.result);

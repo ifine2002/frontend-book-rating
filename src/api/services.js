@@ -497,6 +497,11 @@ export const callFetchCategory = (query) => {
   return axios.get(`/category/list?${query}`);
 }
 
+export const callFetchCategoriesUpload = (query) => {
+  return axios.get(`/category/list-upload?${query}`);
+}
+
+
 
 /**
  *

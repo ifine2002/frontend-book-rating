@@ -145,11 +145,13 @@ const Header = () => {
             key: 'my-profile',
             icon: <ContactsOutlined />
         },
-        {
-            label: <Link to="/admin">Trang Quản Trị</Link>,
-            key: 'admin',
-            icon: <FireOutlined />
-        },
+        ...(user?.role?.name !== 'USER' ? [
+            {
+                label: <Link to="/admin">Trang Quản Trị</Link>,
+                key: 'admin',
+                icon: <FireOutlined />
+            },
+        ] : []),
         {
             label: <label style={{ cursor: 'pointer' }} onClick={handleLogout}>Đăng xuất</label>,
             key: 'logout',
