@@ -29,7 +29,7 @@ const initializeGlobalWebSocket = () => {
     return globalStompClient;
   }
   
-  console.log('Khởi tạo kết nối WebSocket toàn cục');
+  // console.log('Khởi tạo kết nối WebSocket toàn cục');
   const socket = new SockJS('http://localhost:8080/ws');
   const client = new Client({
     webSocketFactory: () => socket,
@@ -39,7 +39,7 @@ const initializeGlobalWebSocket = () => {
   });
 
   client.onConnect = () => {
-    console.log('WebSocket kết nối toàn cục thành công');
+    // console.log('WebSocket kết nối toàn cục thành công');
   };
 
   client.onStompError = (frame) => {
@@ -47,7 +47,7 @@ const initializeGlobalWebSocket = () => {
   };
 
   client.onWebSocketClose = () => {
-    console.log('WebSocket đóng kết nối toàn cục');
+    // console.log('WebSocket đóng kết nối toàn cục');
     if (connectionCount === 0) {
       globalStompClient = null;
     }
@@ -66,7 +66,7 @@ const subscribeToTopic = (topic, callback) => {
   }
   
   if (!activeSubscriptions[topic]) {
-    console.log(`Đăng ký lắng nghe chủ đề: ${topic}`);
+    // console.log(`Đăng ký lắng nghe chủ đề: ${topic}`);
     const subscription = globalStompClient.subscribe(topic, callback);
     activeSubscriptions[topic] = {
       subscription,
@@ -74,7 +74,7 @@ const subscribeToTopic = (topic, callback) => {
     };
     return subscription;
   } else {
-    console.log(`Tăng số lượng đăng ký cho chủ đề: ${topic}`);
+    // console.log(`Tăng số lượng đăng ký cho chủ đề: ${topic}`);
     activeSubscriptions[topic].count += 1;
     return activeSubscriptions[topic].subscription;
   }
@@ -84,10 +84,10 @@ const subscribeToTopic = (topic, callback) => {
 const unsubscribeFromTopic = (topic) => {
   if (activeSubscriptions[topic]) {
     activeSubscriptions[topic].count -= 1;
-    console.log(`Giảm số lượng đăng ký cho chủ đề: ${topic}, còn lại: ${activeSubscriptions[topic].count}`);
+    // console.log(`Giảm số lượng đăng ký cho chủ đề: ${topic}, còn lại: ${activeSubscriptions[topic].count}`);
     
     if (activeSubscriptions[topic].count === 0) {
-      console.log(`Hủy đăng ký chủ đề: ${topic}`);
+      // console.log(`Hủy đăng ký chủ đề: ${topic}`);
       activeSubscriptions[topic].subscription.unsubscribe();
       delete activeSubscriptions[topic];
     }
@@ -113,7 +113,7 @@ const BookCard = ({ book: initialBook }) => {
       console.error('initialBook không tồn tại');
       return;
     }
-    console.log(`[BookCard ${componentId}] Khởi tạo với:`, initialBook);
+    // console.log(`[BookCard ${componentId}] Khởi tạo với:`, initialBook);
   }, [initialBook, componentId]);
 
   useEffect(() => {
@@ -127,7 +127,7 @@ const BookCard = ({ book: initialBook }) => {
     const bookId = initialBook.bookId.toString();
     const topic = `/topic/reviews/${bookId}`;
     
-    console.log(`[BookCard ${componentId}] Thiết lập theo dõi cho book ${bookId}`);
+    // console.log(`[BookCard ${componentId}] Thiết lập theo dõi cho book ${bookId}`);
 
     // Tăng số lượng kết nối
     connectionCount++;
@@ -143,10 +143,10 @@ const BookCard = ({ book: initialBook }) => {
         try {
           const notification = JSON.parse(message.body);
           const { action, data } = notification;
-          console.log(`[BookCard ${componentId}] Nhận thông báo WebSocket: ${action}`, data);
+          // console.log(`[BookCard ${componentId}] Nhận thông báo WebSocket: ${action}`, data);
           
           if (action === "create" || action === "update" || action === "delete") {
-            console.log(`[BookCard ${componentId}] Cập nhật dữ liệu sau thông báo ${action}`);
+            // console.log(`[BookCard ${componentId}] Cập nhật dữ liệu sau thông báo ${action}`);
             await fetchBookDetail();
           }
         } catch (err) {
@@ -162,7 +162,7 @@ const BookCard = ({ book: initialBook }) => {
         setSubscription(sub);
       } else {
         client.onConnect = () => {
-          console.log(`[BookCard ${componentId}] WebSocket kết nối thành công, đăng ký chủ đề`);
+          // console.log(`[BookCard ${componentId}] WebSocket kết nối thành công, đăng ký chủ đề`);
           const sub = subscribeToTopic(topic, handleMessage);
           setSubscription(sub);
         };
@@ -176,7 +176,7 @@ const BookCard = ({ book: initialBook }) => {
 
     // Cleanup
     return () => {
-      console.log(`[BookCard ${componentId}] Cleanup - Component unmount cho book ${bookId}`);
+      // console.log(`[BookCard ${componentId}] Cleanup - Component unmount cho book ${bookId}`);
       isComponentMounted = false;
       
       // Hủy đăng ký chủ đề
@@ -187,7 +187,7 @@ const BookCard = ({ book: initialBook }) => {
       
       // Nếu không còn kết nối nào, đóng WebSocket
       if (connectionCount === 0 && globalStompClient) {
-        console.log('Đóng kết nối WebSocket toàn cục vì không còn component nào sử dụng');
+        // console.log('Đóng kết nối WebSocket toàn cục vì không còn component nào sử dụng');
         globalStompClient.deactivate();
       }
     };
@@ -242,7 +242,7 @@ const BookCard = ({ book: initialBook }) => {
         stars: updatedStars
       }));
       // Cập nhật ngay lập tức thay vì chờ WebSocket
-      console.log(`[BookCard ${componentId}] Cập nhật stars từ modal:`, updatedStars);
+      // console.log(`[BookCard ${componentId}] Cập nhật stars từ modal:`, updatedStars);
     }
     // Luôn gọi fetchBookDetail() để cập nhật mọi thay đổi
     setTimeout(() => fetchBookDetail(), 500);
@@ -256,19 +256,19 @@ const BookCard = ({ book: initialBook }) => {
         return;
       }
       
-      console.log(`[BookCard ${componentId}] Đang lấy dữ liệu chi tiết sách`, initialBook.bookId);
+      // console.log(`[BookCard ${componentId}] Đang lấy dữ liệu chi tiết sách`, initialBook.bookId);
 
       // Luôn sử dụng API detail-book với bookId, bất kể có id hay không
       if (initialBook.bookId) {
         const response = await callGetBookDetailById(initialBook.bookId);
-        console.log(`[BookCard ${componentId}] Nhận dữ liệu từ API:`, response.data);
+        // console.log(`[BookCard ${componentId}] Nhận dữ liệu từ API:`, response.data);
         
         if (response.data) {
           setBook(prevBook => ({
             ...prevBook,
             stars: response.data.stars
           }));
-          console.log(`[BookCard ${componentId}] Cập nhật stars:`, response.data.stars);
+          // console.log(`[BookCard ${componentId}] Cập nhật stars:`, response.data.stars);
         }
       } else {
         console.error(`[BookCard ${componentId}] Không có ID sách (bookId):`, initialBook);

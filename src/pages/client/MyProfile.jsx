@@ -77,7 +77,7 @@ const ProfilePage = () => {
         const client = new Client({
             webSocketFactory: () => socket,
             debug: function (str) {
-                console.log(str);
+                // console.log(str);
             },
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
@@ -85,11 +85,11 @@ const ProfilePage = () => {
         });
 
         client.onConnect = () => {
-            console.log('Connected to WebSocket');
+            // console.log('Connected to WebSocket');
             client.subscribe('/topic/books', (message) => {
                 try {
                     const notificationData = JSON.parse(message.body);
-                    console.log('WebSocket notification received:', notificationData);
+                    // console.log('WebSocket notification received:', notificationData);
                     if (notificationData.userId === id) {
                         resetAndFetchBooks();
                     }
@@ -124,7 +124,7 @@ const ProfilePage = () => {
         };
 
         client.onDisconnect = () => {
-            console.log('Disconnected from WebSocket');
+            // console.log('Disconnected from WebSocket');
         };
 
         client.onStompError = (frame) => {
@@ -165,11 +165,11 @@ const ProfilePage = () => {
     // Hàm lấy dữ liệu sách từ API
     const fetchBooks = async (pageNumber) => {
         if (isLoading.current) {
-            console.log('Fetch already in progress, skipping');
+            // console.log('Fetch already in progress, skipping');
             return Promise.resolve();
         }
 
-        console.log(`Starting fetch for page ${pageNumber}...`);
+        // console.log(`Starting fetch for page ${pageNumber}...`);
         isLoading.current = true;
         setLoading(true);
         
@@ -243,7 +243,7 @@ const ProfilePage = () => {
     // Xử lý khi người dùng cuộn xuống để tải thêm sách
     const handleLoadMore = () => {
         if (isLoading.current) {
-            console.log('Loading already in progress, ignoring load more request');
+            // console.log('Loading already in progress, ignoring load more request');
             return;
         }
 
@@ -347,7 +347,7 @@ const ProfilePage = () => {
 
     // Xử lý khi người dùng thay đổi trang hoặc số lượng sách hiển thị
     const handleFavoritePageChange = (page, pageSize) => {
-        console.log('Changing page:', page, 'pageSize:', pageSize);
+        // console.log('Changing page:', page, 'pageSize:', pageSize);
         fetchFavoriteBooks(page, pageSize);
     };
 
@@ -369,7 +369,6 @@ const ProfilePage = () => {
                     followingId: userId
                 };
                 const res = await calUnfollow(follow);
-                console.log("check res", res);
                 setFollowingStates(prev => ({
                     ...prev,
                     [userId]: false
@@ -380,7 +379,6 @@ const ProfilePage = () => {
                     followingId: userId
                 };
                 const res = await callCreateFollow(follow);
-                console.log("check res", res);
                 setFollowingStates(prev => ({
                     ...prev,
                     [userId]: true
@@ -424,7 +422,6 @@ const ProfilePage = () => {
                     followingId: userId
                 };
                 const res = await calUnfollow(follow);
-                console.log("check res", res);
                 setFollowerStates(prev => ({
                     ...prev,
                     [userId]: false
@@ -435,7 +432,6 @@ const ProfilePage = () => {
                     followingId: userId
                 };
                 const res = await callCreateFollow(follow);
-                console.log("check res", res);
                 setFollowerStates(prev => ({
                     ...prev,
                     [userId]: true

@@ -48,7 +48,7 @@ const UploadBookPage = () => {
         const client = new Client({
             webSocketFactory: () => socket,
             debug: function (str) {
-                console.log(str);
+                // console.log(str);
             },
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
@@ -56,7 +56,7 @@ const UploadBookPage = () => {
         });
 
         client.onConnect = () => {
-            console.log('Connected to WebSocket');
+            // console.log('Connected to WebSocket');
         };
 
         client.onStompError = (frame) => {

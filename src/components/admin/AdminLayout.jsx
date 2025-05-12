@@ -54,7 +54,7 @@ const LayoutAdmin = () => {
         const client = new Client({
             webSocketFactory: () => socket,
             debug: (str) => {
-                console.log(str);
+                // console.log(str);
             },
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
@@ -62,13 +62,13 @@ const LayoutAdmin = () => {
         });
 
         client.onConnect = () => {
-            console.log('AdminLayout connected to WebSocket');
+            // console.log('AdminLayout connected to WebSocket');
             
             // Đăng ký nhận thông báo khi có sách mới
             client.subscribe('/topic/admin-books', (message) => {
                 try {
                     const notification = JSON.parse(message.body);
-                    console.log('AdminLayout received notification:', notification);
+                    // console.log('AdminLayout received notification:', notification);
                     
                     const action = notification.action;
                     if (action === 'create') {

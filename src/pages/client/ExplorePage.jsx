@@ -3,7 +3,7 @@ import SimpleBookCard from '../../components/client/book/SimpleBookCard';
 import { Empty, Pagination, Input, Select , Spin} from 'antd';
 import queryString from 'query-string';
 import { sfLike } from "spring-filter-query-builder";
-import { callGetExploreBooks, callFetchCategory } from '../../api/services';
+import { callGetExploreBooks, callFetchCategoriesUpload } from '../../api/services';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
 
@@ -28,7 +28,7 @@ const ExplorePage = () => {
 
     const fetchCategories = async () => {
         try {
-            const res = await callFetchCategory('');
+            const res = await callFetchCategoriesUpload('');
             if (res && res.data) {
                 const arr = res?.data?.result?.map(item => {
                     return {
@@ -46,7 +46,6 @@ const ExplorePage = () => {
 
     const fetchBooks = async () => {
         try {
-            console.log('Fetching books with filters:', filters);
             setLoading(true);
             const query = buildQuery(bookPagination, filters);
             const res = await callGetExploreBooks(query);

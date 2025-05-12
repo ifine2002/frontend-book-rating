@@ -36,7 +36,7 @@ const HomePage = () => {
     const client = new Client({
       webSocketFactory: () => socket,
       debug: function (str) {
-        console.log(str);
+        // console.log(str);
       },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
@@ -45,13 +45,13 @@ const HomePage = () => {
 
     // Khi kết nối thành công
     client.onConnect = () => {
-      console.log('Connected to WebSocket');
+      // console.log('Connected to WebSocket');
 
       // Subscribe đến topic cập nhật sách
       client.subscribe('/topic/books', (message) => {
         try {
           const notificationData = JSON.parse(message.body);
-          console.log('WebSocket notification received:', notificationData);
+          // console.log('WebSocket notification received:', notificationData);
           
           // Cập nhật lại dữ liệu khi có sự thay đổi
           resetAndFetchBooks();
@@ -85,7 +85,7 @@ const HomePage = () => {
 
     // Khi mất kết nối
     client.onDisconnect = () => {
-      console.log('Disconnected from WebSocket');
+      // console.log('Disconnected from WebSocket');
     };
 
     // Khi có lỗi
@@ -128,19 +128,15 @@ const HomePage = () => {
   const fetchBooks = async (pageNumber) => {
     // Ngăn ngừa fetch trùng lặp
     if (isLoading.current) {
-      console.log('Fetch already in progress, skipping');
       return Promise.resolve();
     }
 
-    console.log(`Starting fetch for page ${pageNumber}...`);
     isLoading.current = true;
     setLoading(true);
     
     try {
       // API sử dụng 0-based index
       const pageForApi = pageNumber - 1;
-      
-      console.log(`Fetching page ${pageNumber} (API page: ${pageForApi})...`);
       
       // Tạo query string chỉ với page, size và sort
       const params = {
@@ -155,8 +151,6 @@ const HomePage = () => {
       
       if (response && response.data) {
         const { result, totalPages, totalElements } = response.data;
-        
-        console.log(`API returned ${result?.length || 0} books (page ${pageNumber}/${totalPages})`);
         
         // Nếu đây là lần fetch đầu tiên hoặc page là 1, thay thế books
         if (pageNumber === 1) {
@@ -174,8 +168,6 @@ const HomePage = () => {
           totalPages
         });
         
-        console.log(`Updated books: now showing ${pageNumber === 1 ? (result?.length || 0) : books.length + (result?.length || 0)} books`);
-        console.log(`Pagination updated: page=${pageNumber}, totalPages=${totalPages}`);
       }
       return Promise.resolve();
     } catch (error) {
@@ -190,13 +182,10 @@ const HomePage = () => {
   // Xử lý khi người dùng cuộn xuống để tải thêm sách
   const handleLoadMore = () => {
     if (isLoading.current) {
-      console.log('Loading already in progress, ignoring load more request');
       return;
     }
 
     const nextPage = pagination.page + 1;
-    
-    console.log(`Load more triggered. Loading page ${nextPage}`);
     
     if (nextPage <= pagination.totalPages) {
       // Lưu lại vị trí scroll hiện tại
@@ -212,7 +201,7 @@ const HomePage = () => {
         }, 100);
       });
     } else {
-      console.log('No more pages to load');
+      // console.log('No more pages to load');
     }
   };
 

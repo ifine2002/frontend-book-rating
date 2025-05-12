@@ -32,7 +32,7 @@ const ApprovalBooksPage = () => {
         const client = new Client({
             webSocketFactory: () => socket,
             debug: (str) => {
-                console.log(str);
+                // console.log(str);
             },
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
@@ -40,20 +40,19 @@ const ApprovalBooksPage = () => {
         });
 
         client.onConnect = () => {
-            console.log('Connected to WebSocket');
+            // console.log('Connected to WebSocket');
             
             // Đăng ký nhận thông báo khi có sách mới được đăng
             client.subscribe('/topic/admin-books', (message) => {
                 try {
                     const notificationData = JSON.parse(message.body);
-                    console.log('WebSocket notification received:', notificationData);
+                    // console.log('WebSocket notification received:', notificationData);
                     
                     // Phân biệt loại thông báo dựa trên action
                     const action = notificationData.action;
                     
                     if (action === 'create') {
                         const newBook = notificationData.data;
-                        console.log("check newBook:", newBook)
                         // Cập nhật danh sách sách nếu đang ở trang đầu tiên
                         if (data.page === 1) {
                             setBooks(prevBooks => {
