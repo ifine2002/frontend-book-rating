@@ -29,12 +29,18 @@ const LoginPage = () => {
         const res = await callLogin(username, password);
         setIsSubmit(false);
 
-        if (res?.data) {
+        if (res && res.status === 200) {
             localStorage.setItem('access_token', res.data.access_token);
             dispatch(setUserLoginInfo(res.data.user));
             message.success('Đăng nhập tài khoản thành công!');
             navigate(callback ? callback : '/');
-        } else {
+        } else if (res && res.status === 401) {
+            notification.error({
+                message: "Có lỗi xảy ra",
+                description: "Email hoặc mật khẩu không chính xác!",
+                duration: 5
+            });
+        } else if (res && res.status === 400) {
             notification.error({
                 message: "Có lỗi xảy ra",
                 description:
@@ -87,11 +93,16 @@ const LoginPage = () => {
                                 </Button>
                             </Form.Item>
                             <Divider>Or</Divider>
-                            <p className="text text-normal">Chưa có tài khoản ?
-                                <span>
-                                    <Link to='/register' > Đăng Ký </Link>
-                                </span>
-                            </p>
+                            <div className="flex justify-between">
+                                <p className="text text-normal">Chưa có tài khoản ?
+                                    <span>
+                                        <Link to='/register' > Đăng Ký </Link>
+                                    </span>
+                                </p>
+                                    <span className="text text-normal">
+                                        <Link to='/forgot-password' > Quên mật khẩu ?</Link>
+                                    </span>
+                            </div>
                         </Form>
                     </section>
                 </div>

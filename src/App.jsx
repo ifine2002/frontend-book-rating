@@ -32,6 +32,8 @@ import ProtectedRoute from './components/share/ProtectedRoute';
 import WelcomeLayout from './components/client/WelcomeLayout';
 import VerifyEmailPage from './pages/auth/verify-email';
 import ExplorePage from './pages/client/ExplorePage';
+import ForgotPasswordPage from './pages/auth/forgot-password';
+import ResetPasswordPage from './pages/auth/reset-password';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -162,6 +164,14 @@ export default function App() {
       path: "/verify-email",
       element: <VerifyEmailPage />,
     },
+    {
+      path: "/forgot-password",
+      element: <ForgotPasswordPage />,
+    },
+    {
+      path: "/reset-password",
+      element: <ResetPasswordPage />,
+    }
   ]);
 
   return (

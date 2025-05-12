@@ -31,6 +31,16 @@ export const callResendToken = (email) => {
   return axios.get(`/auth/resend-token?email=${email}`);
 }
 
+export const callSendTokenResetPassword = (email) => {
+  return axios.get(`/auth/send-reset-token?email=${email}`);
+}
+
+export const callResetPassword = (token, request) => {
+  return axios.post(`/auth/reset-password?token=${token}`, {
+    newPassword: request.newPassword,
+    confirmPassword: request.confirmPassword
+  });
+}
 
 export const callFetchAccount = () => {
   return axios.get('/auth/account');

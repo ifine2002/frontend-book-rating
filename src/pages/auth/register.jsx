@@ -16,7 +16,6 @@ const RegisterPage = () => {
         }
         setIsSubmit(true);
         const res = await callRegister(email, password, confirmPassword, fullName);
-        console.log('check res: ', res);
         setIsSubmit(false);
         if (res && res.status === 201) {
             message.success('Đã đăng ký thành công! Vui lòng kiểm tra email để lấy mã xác thực.');

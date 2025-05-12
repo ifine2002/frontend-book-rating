@@ -204,16 +204,16 @@ axiosInstance.interceptors.response.use(
       });
     }
     
-    // Xử lý các lỗi khác
-    if (error.response && error.response.data) {
-      const message = error.response.data.message || 'Đã xảy ra lỗi';
-      if (+error.response.status !== 401 && +error.response.status !== 403) {
-        notification.error({
-          message: 'Lỗi',
-          description: message
-        });
-      }
-    }
+    // // Xử lý các lỗi khác
+    // if (error.response && error.response.data) {
+    //   const message = error.response.data.message || 'Đã xảy ra lỗi';
+    //   if (+error.response.status !== 401 && +error.response.status !== 403) {
+    //     notification.error({
+    //       message: 'Lỗi',
+    //       description: message
+    //     });
+    //   }
+    // }
     
     return error?.response?.data ?? Promise.reject(error);
   }
