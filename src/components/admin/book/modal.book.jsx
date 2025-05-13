@@ -13,23 +13,21 @@ const ModalBook = (props) => {
 
     const [form] = Form.useForm();
 
+    useEffect(() => {
+        if (openModal) {
+            fetchCategory();
+        }
+    }, [openModal]);
 
     useEffect(() => {
         const init = async () => {
-            await fetchCategory();
             setIsDeleteImage(false);
         
             if (dataInit?.id) {
-                if (dataInit.categories) {
-                    const d = dataInit.categories;
-                    const arr = d.map((item) => {
-                       return {
-                        label: item.name,
-                        value: item.id + "",
-                        key: item.id + ""
-                    }
-                    });
-                    form.setFieldValue("categories", arr);
+                if (dataInit.categories && Array.isArray(dataInit.categories)) {
+                    await fetchCategory();
+                    const categoryValues = dataInit.categories.map(item => item.id);
+                    form.setFieldValue("categories", categoryValues);
                 }
 
                 if (dataInit.image) {
@@ -59,8 +57,8 @@ const ModalBook = (props) => {
             const arr = res?.data?.result?.map(item => {
                 return {
                     label: item.name,
-                    value: item.id + "",
-                    key: item.id + ""
+                    value: item.id,
+                    key: item.id
                 }
             }) ?? [];
             setOptionsCategory(arr);
@@ -112,9 +110,7 @@ const ModalBook = (props) => {
                     language,
                     author,
                     status,
-                    categoryIds: Array.isArray(categories) 
-                        ? categories.map(item => typeof item === 'string' ? item : item.value) 
-                        : [categories]
+                    categoryIds: categories || []
                 };
                 
                 if (fileList.length > 0 && fileList[0].originFileObj) {
@@ -151,9 +147,7 @@ const ModalBook = (props) => {
                     language,
                     author,
                     status,
-                    categoryIds: Array.isArray(categories) 
-                        ? categories.map(item => typeof item === 'string' ? item : item.value) 
-                        : [categories]
+                    categoryIds: categories || []
                 };
                 
                 if (fileList.length > 0 && fileList[0].originFileObj) {
@@ -181,7 +175,6 @@ const ModalBook = (props) => {
         setFileList([]);
         setIsDeleteImage(false);
         setOpenModal(false);
-        setOptionsCategory([]);
     }
 
     return (
@@ -312,7 +305,6 @@ const ModalBook = (props) => {
                             label={"Category"}
                             name="categories"
                             rules={[{ required: true, message: 'Vui lòng chọn ít nhất 1 thể loại!' }]}
-
                         >
                             <Select
                                 mode="multiple"

@@ -28,12 +28,13 @@ const ExplorePage = () => {
 
     const fetchCategories = async () => {
         try {
-            const res = await callFetchCategoriesUpload('');
+            let query = `page=0&size=100&sort=createdAt,desc`;
+            const res = await callFetchCategoriesUpload(query);
             if (res && res.data) {
                 const arr = res?.data?.result?.map(item => {
                     return {
                         label: item.name,
-                        value: item.id,
+                        value: item.name,
                         key: item.id
                     }
                 }) ?? [];
@@ -77,7 +78,6 @@ const ExplorePage = () => {
             // Đợi 500ms trước khi cập nhật
             debounceTime(500)
         ).subscribe(value => {
-            console.log('RxJS value after debounce:', value);
             setFilters(prev => ({
                 ...prev,
                 author: value
@@ -100,7 +100,6 @@ const ExplorePage = () => {
 
     const handleAuthorChange = (e) => {
         const value = e.target.value;
-        console.log('Input changed:', value);
         
         // Cập nhật UI ngay lập tức
         setInputValue(value);
@@ -137,7 +136,7 @@ const ExplorePage = () => {
         let filterArray = [];
         
         if (filters.author) filterArray.push(`${sfLike("author", filters.author)}`);
-        if (filters.category) filterArray.push(`${sfLike("categories.id", filters.category)}`);
+        if (filters.category) filterArray.push(`${sfLike("categories.name", filters.category)}`);
         
         if (filterArray.length > 0) {
             q.filter = filterArray.join(" and ");

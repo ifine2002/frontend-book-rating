@@ -31,7 +31,7 @@ const ProfilePage = () => {
     const [books, setBooks] = useState([]);
     const [pagination, setPagination] = useState({
         page: 1,
-        pageSize: 10,
+        pageSize: 5,
         totalElements: 0,
         totalPages: 0
     });
